@@ -1,0 +1,52 @@
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# IDE and editor files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+
+# Java / Spring Boot
+target/
+build/
+out/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# Gradle
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+
+# Maven
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Node tooling, if a frontend is added later
+node_modules/
+dist/
+coverage/
+
+# Test and runtime artifacts
+logs/
+tmp/
+temp/
+*.pid
+*.seed
+
+# Local planning notes
+docs/architecture/generic_ai_audit_tool_mimari_plan.md
