@@ -90,7 +90,7 @@ public class GenericJsonWalker {
         if (value == null || value.isNull()) {
             return "null";
         }
-        if (value.isTextual()) {
+        if (value.isString()) {
             return "string";
         }
         if (value.isNumber()) {
