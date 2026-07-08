@@ -17,9 +17,6 @@ import tools.jackson.databind.JsonNode;
 public class FieldClassifier {
 
     private static final Set<String> NOISE_KEYS = Set.of(
-            "self",
-            "avatarUrls",
-            "iconUrl",
             "expand",
             "operations",
             "schema"
@@ -35,15 +32,15 @@ public class FieldClassifier {
     public FieldClassification classify(List<RawField> rawFields) {
         FieldClassification classification = new FieldClassification();
         ContextStatistics statistics = classification.getStatistics();
-        Set<String> collapsedObjectPaths = new HashSet<>();
+        Set<String> consumedSimpleValuePaths = new HashSet<>();
         Set<String> skippedNoisePaths = new HashSet<>();
 
         for (RawField rawField : rawFields) {
-            if (isDescendantOf(rawField, skippedNoisePaths)) {
+            if (consumedSimpleValuePaths.contains(rawField.getPath())) {
                 continue;
             }
 
-            if (isDescendantOfCollapsedObject(rawField, collapsedObjectPaths)) {
+            if (isDescendantOf(rawField, skippedNoisePaths)) {
                 continue;
             }
 
@@ -57,6 +54,11 @@ public class FieldClassifier {
 
             if (value == null || value.isNull()) {
                 statistics.setNullFieldCount(statistics.getNullFieldCount() + 1);
+                continue;
+            }
+
+            if (isLinkValue(value)) {
+                statistics.setSkippedNoiseFieldCount(statistics.getSkippedNoiseFieldCount() + 1);
                 continue;
             }
 
@@ -78,10 +80,10 @@ public class FieldClassifier {
                     continue;
                 }
 
-                JsonNode simpleValue = extractSimpleObjectValue(value);
-                if (simpleValue != null && !isEmptyString(simpleValue)) {
-                    addActiveField(classification, rawField, simpleValue.asString(), "object.simple");
-                    collapsedObjectPaths.add(rawField.getPath());
+                SimpleValue simpleValue = extractSimpleObjectValue(value);
+                if (simpleValue != null) {
+                    addActiveField(classification, rawField, simpleValue.value().asString(), "object.simple");
+                    consumedSimpleValuePaths.add(rawField.getPath() + "." + simpleValue.key());
                 }
                 continue;
             }
@@ -98,24 +100,21 @@ public class FieldClassifier {
         return rawField.getKey() != null && NOISE_KEYS.contains(rawField.getKey());
     }
 
-    private boolean isDescendantOfCollapsedObject(RawField rawField, Set<String> collapsedObjectPaths) {
-        return isDescendantOf(rawField, collapsedObjectPaths);
-    }
-
     private boolean isDescendantOf(RawField rawField, Set<String> parentPaths) {
         return parentPaths.stream()
                 .anyMatch(path -> rawField.getPath().startsWith(path + ".")
                         || rawField.getPath().startsWith(path + "["));
     }
 
-    private JsonNode extractSimpleObjectValue(JsonNode value) {
+    private SimpleValue extractSimpleObjectValue(JsonNode value) {
         if (!value.isObject()) {
             return null;
         }
 
         for (String key : SIMPLE_VALUE_KEYS) {
-            if (value.hasNonNull(key)) {
-                return value.get(key);
+            JsonNode candidate = value.get(key);
+            if (candidate != null && candidate.isString() && !isEmptyString(candidate) && !isLinkValue(candidate)) {
+                return new SimpleValue(key, candidate);
             }
         }
 
@@ -124,6 +123,17 @@ public class FieldClassifier {
 
     private boolean isEmptyString(JsonNode value) {
         return value != null && value.isString() && value.asString().trim().isEmpty();
+    }
+
+    private boolean isLinkValue(JsonNode value) {
+        if (value == null || !value.isString()) {
+            return false;
+        }
+
+        String text = value.asString().trim().toLowerCase();
+        return text.startsWith("http://")
+                || text.startsWith("https://")
+                || text.startsWith("www.");
     }
 
     private void addActiveField(FieldClassification classification, RawField rawField, String value, String valueType) {
@@ -162,5 +172,8 @@ public class FieldClassifier {
         FieldMetadata metadata = new FieldMetadata();
         metadata.setProvided(false);
         return metadata;
+    }
+
+    private record SimpleValue(String key, JsonNode value) {
     }
 }

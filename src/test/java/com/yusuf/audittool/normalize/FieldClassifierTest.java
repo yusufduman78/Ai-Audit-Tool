@@ -44,9 +44,13 @@ class FieldClassifierTest {
         JsonNode payload = jsonMapper.readTree("""
                 {
                   "status": {
-                    "self": "hidden",
+                    "self": "https://jira.example/status/10000",
                     "id": "10000",
                     "name": "Done"
+                  },
+                  "resolution": {
+                    "description": "Issue has been completed",
+                    "name": "Resolved"
                   },
                   "assignee": {
                     "displayName": "Ali Yilmaz"
@@ -56,21 +60,29 @@ class FieldClassifierTest {
 
         FieldClassification classification = classifier.classify(walker.walk(payload));
 
-        assertEquals(List.of("status", "assignee"), activePaths(classification));
+        assertEquals(List.of("status", "status.id", "resolution", "resolution.description", "assignee"),
+                activePaths(classification));
         assertEquals("Done", activeByPath(classification, "status").getValue());
+        assertEquals("10000", activeByPath(classification, "status.id").getValue());
+        assertEquals("Resolved", activeByPath(classification, "resolution").getValue());
+        assertEquals("Issue has been completed", activeByPath(classification, "resolution.description").getValue());
         assertEquals("Ali Yilmaz", activeByPath(classification, "assignee").getValue());
-        assertEquals(0, classification.getStatistics().getSkippedNoiseFieldCount());
+        assertEquals(1, classification.getStatistics().getSkippedNoiseFieldCount());
     }
 
     @Test
-    void skipsNoiseFieldsWhenTheyAreNotPartOfCollapsedObject() throws Exception {
+    void skipsStructuralNoiseAndUrlValues() throws Exception {
         JsonNode payload = jsonMapper.readTree("""
                 {
-                  "self": "hidden",
+                  "self": "https://jira.example/issue/REQ-101",
                   "fields": {
                     "summary": "Login requirement",
                     "avatarUrls": {
-                      "small": "hidden"
+                      "small": "https://jira.example/avatar-small.png"
+                    },
+                    "iconUrl": "https://jira.example/icon.png",
+                    "schema": {
+                      "type": "string"
                     }
                   }
                 }
@@ -79,7 +91,7 @@ class FieldClassifierTest {
         FieldClassification classification = classifier.classify(walker.walk(payload));
 
         assertEquals(List.of("fields.summary"), activePaths(classification));
-        assertEquals(2, classification.getStatistics().getSkippedNoiseFieldCount());
+        assertEquals(4, classification.getStatistics().getSkippedNoiseFieldCount());
     }
 
     @Test
