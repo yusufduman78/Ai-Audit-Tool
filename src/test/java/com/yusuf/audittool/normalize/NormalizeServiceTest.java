@@ -21,7 +21,8 @@ class NormalizeServiceTest {
     private final JsonMapper jsonMapper = new JsonMapper();
     private final NormalizeService normalizeService = new NormalizeService(
             new GenericJsonWalker(),
-            new FieldClassifier()
+            new FieldClassifier(),
+            new SourceInfoExtractor()
     );
 
     @Test
@@ -45,6 +46,8 @@ class NormalizeServiceTest {
         AgentContext context = normalizeService.normalize(request);
 
         assertEquals(List.of("key", "fields.summary", "fields.status"), activePaths(context));
+        assertEquals("REQ-101", context.getSourceInfo().getEntityId());
+        assertEquals("Login requirement", context.getSourceInfo().getEntityLabel());
         assertEquals(List.of("fields.customfield_13104", "fields.customfield_14500"), emptyPaths(context));
         assertEquals(3, context.getStatistics().getActiveFieldCount());
         assertEquals(2, context.getStatistics().getEmptyFieldCount());

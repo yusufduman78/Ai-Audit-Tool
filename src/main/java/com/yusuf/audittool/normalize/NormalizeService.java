@@ -12,10 +12,16 @@ public class NormalizeService {
 
     private final GenericJsonWalker jsonWalker;
     private final FieldClassifier fieldClassifier;
+    private final SourceInfoExtractor sourceInfoExtractor;
 
-    public NormalizeService(GenericJsonWalker jsonWalker, FieldClassifier fieldClassifier) {
+    public NormalizeService(
+            GenericJsonWalker jsonWalker,
+            FieldClassifier fieldClassifier,
+            SourceInfoExtractor sourceInfoExtractor
+    ) {
         this.jsonWalker = jsonWalker;
         this.fieldClassifier = fieldClassifier;
+        this.sourceInfoExtractor = sourceInfoExtractor;
     }
 
     public AgentContext normalize(AnalyzeRequest request) {
@@ -26,7 +32,7 @@ public class NormalizeService {
         FieldClassification classification = fieldClassifier.classify(jsonWalker.walk(request.getPayload()));
 
         AgentContext context = new AgentContext();
-        context.setSourceInfo(new SourceInfo());
+        context.setSourceInfo(sourceInfoExtractor.extract(request.getPayload()));
         context.setActiveFields(classification.getActiveFields());
         context.setEmptyFields(classification.getEmptyFields());
         context.setChecklistContext(emptyChecklistContext());
@@ -41,4 +47,3 @@ public class NormalizeService {
         return checklistContext;
     }
 }
-
