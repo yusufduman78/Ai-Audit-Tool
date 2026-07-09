@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.yusuf.audittool.model.AnalyzeRequest;
+import com.yusuf.audittool.model.AnalyzeResponse;
 import com.yusuf.audittool.model.NormalizeResponse;
 import com.yusuf.audittool.service.AuditService;
 
@@ -30,5 +31,10 @@ public class AnalyzeController {
     @PostMapping("/normalize")
     public NormalizeResponse normalize(@RequestBody AnalyzeRequest request) {
         return auditService.normalize(request);
+    }
+
+    @PostMapping("/analyze")
+    public AnalyzeResponse analyze(@RequestBody AnalyzeRequest request) {
+        return auditService.analyze(request);
     }
 }
