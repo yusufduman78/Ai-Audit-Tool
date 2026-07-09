@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import com.yusuf.audittool.model.EmptyField;
 import com.yusuf.audittool.model.NormalizedField;
 
 import tools.jackson.databind.JsonNode;
@@ -114,13 +113,13 @@ class FieldClassifierTest {
 
     private List<String> activePaths(FieldClassification classification) {
         return classification.getActiveFields().stream()
-                .map(NormalizedField::getPath)
+                .map(field -> field.getPath())
                 .toList();
     }
 
     private List<String> emptyPaths(FieldClassification classification) {
         return classification.getEmptyFields().stream()
-                .map(EmptyField::getPath)
+                .map(field -> field.getPath())
                 .toList();
     }
 

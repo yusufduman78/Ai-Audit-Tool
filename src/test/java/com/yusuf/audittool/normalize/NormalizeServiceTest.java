@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import com.yusuf.audittool.model.AgentContext;
 import com.yusuf.audittool.model.AnalyzeRequest;
 import com.yusuf.audittool.model.EmptyField;
-import com.yusuf.audittool.model.NormalizedField;
 import com.yusuf.audittool.checklist.ChecklistMapper;
 import com.yusuf.audittool.metadata.MetadataMapper;
 
@@ -140,13 +139,13 @@ class NormalizeServiceTest {
 
     private List<String> activePaths(AgentContext context) {
         return context.getActiveFields().stream()
-                .map(NormalizedField::getPath)
+                .map(field -> field.getPath())
                 .toList();
     }
 
     private List<String> emptyPaths(AgentContext context) {
         return context.getEmptyFields().stream()
-                .map(EmptyField::getPath)
+                .map(field -> field.getPath())
                 .toList();
     }
 }

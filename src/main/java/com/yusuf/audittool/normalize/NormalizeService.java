@@ -6,7 +6,6 @@ import com.yusuf.audittool.model.AgentContext;
 import com.yusuf.audittool.model.AnalyzeRequest;
 import com.yusuf.audittool.checklist.ChecklistMapper;
 import com.yusuf.audittool.metadata.MetadataMapper;
-import com.yusuf.audittool.model.SourceInfo;
 
 @Service
 public class NormalizeService {

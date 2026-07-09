@@ -31,7 +31,7 @@ class GenericJsonWalkerTest {
         List<RawField> fields = walker.walk(payload);
 
         assertEquals(List.of("key", "fields", "fields.summary", "fields.status", "fields.status.name"),
-                fields.stream().map(RawField::getPath).toList());
+                fields.stream().map(field -> field.getPath()).toList());
 
         RawField status = fieldByPath(fields, "fields.status");
         assertEquals("fields", status.getParentPath());
@@ -58,7 +58,7 @@ class GenericJsonWalkerTest {
         List<RawField> fields = walker.walk(payload);
 
         assertEquals(List.of("items", "items[0]", "items[0].name", "items[1]", "items[1].name"),
-                fields.stream().map(RawField::getPath).toList());
+                fields.stream().map(field -> field.getPath()).toList());
 
         RawField secondItemName = fieldByPath(fields, "items[1].name");
         assertEquals("items[1]", secondItemName.getParentPath());
