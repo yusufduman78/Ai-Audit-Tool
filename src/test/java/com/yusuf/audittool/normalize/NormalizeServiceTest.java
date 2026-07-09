@@ -12,6 +12,7 @@ import com.yusuf.audittool.model.AgentContext;
 import com.yusuf.audittool.model.AnalyzeRequest;
 import com.yusuf.audittool.model.EmptyField;
 import com.yusuf.audittool.model.NormalizedField;
+import com.yusuf.audittool.checklist.ChecklistMapper;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -22,7 +23,8 @@ class NormalizeServiceTest {
     private final NormalizeService normalizeService = new NormalizeService(
             new GenericJsonWalker(),
             new FieldClassifier(),
-            new SourceInfoExtractor()
+            new SourceInfoExtractor(),
+            new ChecklistMapper()
     );
 
     @Test
@@ -54,6 +56,30 @@ class NormalizeServiceTest {
         assertEquals(1, context.getStatistics().getNullFieldCount());
         assertEquals(1, context.getStatistics().getSkippedNoiseFieldCount());
         assertFalse(context.getChecklistContext().isProvided());
+    }
+
+    @Test
+    void includesChecklistContextWhenProvided() throws Exception {
+        AnalyzeRequest request = request("""
+                {
+                  "key": "REQ-101",
+                  "fields": {
+                    "summary": "Login requirement"
+                  }
+                }
+                """);
+        request.setChecklist(jsonMapper.readTree("""
+                [
+                  "Requirement açık olmalıdır.",
+                  "Done için test kanıtı bulunmalıdır."
+                ]
+                """));
+
+        AgentContext context = normalizeService.normalize(request);
+
+        assertEquals(true, context.getChecklistContext().isProvided());
+        assertEquals(2, context.getChecklistContext().getItems().size());
+        assertEquals("Requirement açık olmalıdır.", context.getChecklistContext().getItems().get(0).getText());
     }
 
     @Test
