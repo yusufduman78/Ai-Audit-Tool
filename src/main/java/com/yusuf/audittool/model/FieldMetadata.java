@@ -9,10 +9,14 @@ public class FieldMetadata {
     private String id;
     private String name;
     private String schemaType;
+    private String schemaSystem;
+    private String schemaItems;
     private String customType;
+    private String customId;
     private String descriptionTr;
     private Boolean required;
-    private List<String> allowedValues = new ArrayList<>();
+    private Boolean hasDefaultValue;
+    private List<AllowedValue> allowedValues = new ArrayList<>();
 
     public boolean isProvided() {
         return provided;
@@ -46,12 +50,36 @@ public class FieldMetadata {
         this.schemaType = schemaType;
     }
 
+    public String getSchemaSystem() {
+        return schemaSystem;
+    }
+
+    public void setSchemaSystem(String schemaSystem) {
+        this.schemaSystem = schemaSystem;
+    }
+
+    public String getSchemaItems() {
+        return schemaItems;
+    }
+
+    public void setSchemaItems(String schemaItems) {
+        this.schemaItems = schemaItems;
+    }
+
     public String getCustomType() {
         return customType;
     }
 
     public void setCustomType(String customType) {
         this.customType = customType;
+    }
+
+    public String getCustomId() {
+        return customId;
+    }
+
+    public void setCustomId(String customId) {
+        this.customId = customId;
     }
 
     public String getDescriptionTr() {
@@ -70,12 +98,19 @@ public class FieldMetadata {
         this.required = required;
     }
 
-    public List<String> getAllowedValues() {
+    public Boolean getHasDefaultValue() {
+        return hasDefaultValue;
+    }
+
+    public void setHasDefaultValue(Boolean hasDefaultValue) {
+        this.hasDefaultValue = hasDefaultValue;
+    }
+
+    public List<AllowedValue> getAllowedValues() {
         return allowedValues;
     }
 
-    public void setAllowedValues(List<String> allowedValues) {
+    public void setAllowedValues(List<AllowedValue> allowedValues) {
         this.allowedValues = allowedValues;
     }
 }
-

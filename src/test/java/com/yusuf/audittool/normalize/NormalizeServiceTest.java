@@ -13,6 +13,7 @@ import com.yusuf.audittool.model.AnalyzeRequest;
 import com.yusuf.audittool.model.EmptyField;
 import com.yusuf.audittool.model.NormalizedField;
 import com.yusuf.audittool.checklist.ChecklistMapper;
+import com.yusuf.audittool.metadata.MetadataMapper;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -24,7 +25,8 @@ class NormalizeServiceTest {
             new GenericJsonWalker(),
             new FieldClassifier(),
             new SourceInfoExtractor(),
-            new ChecklistMapper()
+            new ChecklistMapper(),
+            new MetadataMapper()
     );
 
     @Test
@@ -55,7 +57,42 @@ class NormalizeServiceTest {
         assertEquals(2, context.getStatistics().getEmptyFieldCount());
         assertEquals(1, context.getStatistics().getNullFieldCount());
         assertEquals(1, context.getStatistics().getSkippedNoiseFieldCount());
+        assertEquals(0, context.getStatistics().getMetadataMatchedCount());
+        assertEquals(5, context.getStatistics().getMetadataMissingCount());
         assertFalse(context.getChecklistContext().isProvided());
+    }
+
+    @Test
+    void enrichesContextWithMetadataAndDescriptions() throws Exception {
+        AnalyzeRequest request = request("""
+                {
+                  "key": "REQ-101",
+                  "fields": {
+                    "summary": "Login requirement",
+                    "customfield_13104": ""
+                  }
+                }
+                """);
+        request.setMetadata(jsonMapper.readTree("""
+                {
+                  "customfield_13104": {
+                    "name": "Acceptance Criteria",
+                    "schemaType": "string"
+                  }
+                }
+                """));
+        request.setFieldDescriptions(jsonMapper.readTree("""
+                {
+                  "customfield_13104": "Requirement kabul kriterlerini belirtir."
+                }
+                """));
+
+        AgentContext context = normalizeService.normalize(request);
+
+        EmptyField emptyField = context.getEmptyFields().get(0);
+        assertEquals("Acceptance Criteria", emptyField.getMetadata().getName());
+        assertEquals("Requirement kabul kriterlerini belirtir.", emptyField.getMetadata().getDescriptionTr());
+        assertEquals(1, context.getStatistics().getMetadataMatchedCount());
     }
 
     @Test
