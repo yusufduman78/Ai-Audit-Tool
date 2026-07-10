@@ -77,6 +77,40 @@ class AnalyzeControllerTest {
     }
 
     @Test
+    void normalizeReturnsCommentContextWithoutDuplicatingCommentFields() throws Exception {
+        mockMvc.perform(post("/api/normalize")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "payload": {
+                                    "key": "REQ-101",
+                                    "fields": {
+                                      "summary": "Login requirement",
+                                      "comment": {
+                                        "startAt": 0,
+                                        "total": 1,
+                                        "comments": [
+                                          {
+                                            "body": "Test execution is pending approval.",
+                                            "author": { "displayName": "Reviewer A" },
+                                            "created": "2026-07-10T10:30:00.000+0000"
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  }
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.agentContext.activeFields[0].path").value("key"))
+                .andExpect(jsonPath("$.agentContext.activeFields[1].path").value("fields.summary"))
+                .andExpect(jsonPath("$.agentContext.commentContext.provided").value(true))
+                .andExpect(jsonPath("$.agentContext.commentContext.coverage").value("FULL"))
+                .andExpect(jsonPath("$.agentContext.commentContext.comments[0].body")
+                        .value("Test execution is pending approval."));
+    }
+
+    @Test
     void analyzeBuildsPromptAndReturnsAgentOutput() throws Exception {
         when(agentClient.analyze(anyString())).thenReturn("Audit report");
 
@@ -96,6 +130,41 @@ class AnalyzeControllerTest {
                 .andExpect(jsonPath("$.agentOutput").value("Audit report"));
 
         verify(agentClient).analyze(contains("Login requirement"));
+    }
+
+    @Test
+    void analyzeIncludesCommentsInTheAgentPrompt() throws Exception {
+        when(agentClient.analyze(anyString())).thenReturn("Audit report");
+
+        mockMvc.perform(post("/api/analyze")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "payload": {
+                                    "key": "REQ-101",
+                                    "fields": {
+                                      "summary": "Login requirement",
+                                      "comment": {
+                                        "startAt": 0,
+                                        "total": 1,
+                                        "comments": [
+                                          {
+                                            "body": "Test execution is pending approval.",
+                                            "author": { "displayName": "Reviewer A" },
+                                            "created": "2026-07-10T10:30:00.000+0000"
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  }
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.agentOutput").value("Audit report"));
+
+        verify(agentClient).analyze(contains("COMMENTS"));
+        verify(agentClient).analyze(contains("Test execution is pending approval."));
+        verify(agentClient).analyze(contains("Reviewer A"));
     }
 
     @Test
