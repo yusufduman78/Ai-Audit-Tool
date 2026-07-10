@@ -8,7 +8,6 @@ import com.yusuf.audittool.model.AllowedValue;
 import com.yusuf.audittool.model.AgentContext;
 import com.yusuf.audittool.model.ChecklistContext;
 import com.yusuf.audittool.model.ChecklistItem;
-import com.yusuf.audittool.model.ContextStatistics;
 import com.yusuf.audittool.model.EmptyField;
 import com.yusuf.audittool.model.FieldMetadata;
 import com.yusuf.audittool.model.NormalizedField;
@@ -24,7 +23,6 @@ public class AgentContextRenderer {
         renderActiveFields(context.getActiveFields(), output);
         renderEmptyFields(context.getEmptyFields(), output);
         renderChecklist(context.getChecklistContext(), output);
-        renderStatistics(context.getStatistics(), output);
 
         return output.toString().trim();
     }
@@ -73,7 +71,6 @@ public class AgentContextRenderer {
 
     private void renderMetadata(FieldMetadata metadata, StringBuilder output) {
         if (metadata == null || !metadata.isProvided()) {
-            appendIndented(output, "Metadata", "not provided");
             return;
         }
 
@@ -120,21 +117,6 @@ public class AgentContextRenderer {
             output.append("- Provided but empty\n");
         }
         output.append('\n');
-    }
-
-    private void renderStatistics(ContextStatistics statistics, StringBuilder output) {
-        output.append("STATISTICS\n");
-        if (statistics == null) {
-            output.append("- Not available\n");
-            return;
-        }
-
-        appendLine(output, "Active Fields", String.valueOf(statistics.getActiveFieldCount()));
-        appendLine(output, "Empty Fields", String.valueOf(statistics.getEmptyFieldCount()));
-        appendLine(output, "Null Fields", String.valueOf(statistics.getNullFieldCount()));
-        appendLine(output, "Skipped Noise Fields", String.valueOf(statistics.getSkippedNoiseFieldCount()));
-        appendLine(output, "Metadata Matched", String.valueOf(statistics.getMetadataMatchedCount()));
-        appendLine(output, "Metadata Missing", String.valueOf(statistics.getMetadataMissingCount()));
     }
 
     private String displayName(String fallback, FieldMetadata metadata) {

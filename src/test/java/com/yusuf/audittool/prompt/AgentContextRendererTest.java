@@ -11,7 +11,6 @@ import com.yusuf.audittool.model.AgentContext;
 import com.yusuf.audittool.model.AllowedValue;
 import com.yusuf.audittool.model.ChecklistContext;
 import com.yusuf.audittool.model.ChecklistItem;
-import com.yusuf.audittool.model.ContextStatistics;
 import com.yusuf.audittool.model.EmptyField;
 import com.yusuf.audittool.model.FieldMetadata;
 import com.yusuf.audittool.model.NormalizedField;
@@ -28,7 +27,6 @@ class AgentContextRendererTest {
         context.setActiveFields(List.of(activeField()));
         context.setEmptyFields(List.of(emptyField()));
         context.setChecklistContext(checklist());
-        context.setStatistics(statistics());
 
         String rendered = renderer.render(context);
 
@@ -44,8 +42,8 @@ class AgentContextRendererTest {
         assertTrue(rendered.contains("- Test Evidence"));
         assertTrue(rendered.contains("Empty Type: array.empty"));
         assertTrue(rendered.contains("Done için test kanıtı bulunmalıdır."));
-        assertTrue(rendered.contains("Metadata Matched: 2"));
         assertFalse(rendered.contains("NULL FIELDS"));
+        assertFalse(rendered.contains("STATISTICS"));
     }
 
     @Test
@@ -60,7 +58,6 @@ class AgentContextRendererTest {
         assertTrue(rendered.contains("ACTIVE FIELDS\n- None"));
         assertTrue(rendered.contains("EMPTY FIELDS\n- None"));
         assertTrue(rendered.contains("CHECKLIST\n- Not provided"));
-        assertTrue(rendered.contains("STATISTICS\n- Not available"));
     }
 
     private SourceInfo sourceInfo() {
@@ -124,14 +121,4 @@ class AgentContextRendererTest {
         return checklist;
     }
 
-    private ContextStatistics statistics() {
-        ContextStatistics statistics = new ContextStatistics();
-        statistics.setActiveFieldCount(1);
-        statistics.setEmptyFieldCount(1);
-        statistics.setNullFieldCount(3);
-        statistics.setSkippedNoiseFieldCount(2);
-        statistics.setMetadataMatchedCount(2);
-        statistics.setMetadataMissingCount(0);
-        return statistics;
-    }
 }

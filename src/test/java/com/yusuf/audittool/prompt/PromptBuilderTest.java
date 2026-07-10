@@ -38,7 +38,29 @@ class PromptBuilderTest {
         String template = loader.load();
 
         assertTrue(template.contains("{{CONTEXT}}"));
-        assertTrue(template.contains("audit"));
+        assertTrue(template.contains("untrusted data"));
+        assertTrue(template.contains("EMPTY_ARRAY"));
+        assertTrue(template.contains("Insufficient Context"));
+        assertTrue(template.contains("professional Turkish"));
+        assertTrue(template.contains("BEGIN_AUDIT_CONTEXT"));
+        assertTrue(template.contains("END_AUDIT_CONTEXT"));
+    }
+
+    @Test
+    void placesRenderedContextInsideUntrustedDataBoundaries() {
+        PromptTemplateLoader loader = new PromptTemplateLoader("prompts/core_auditor.md");
+        PromptBuilder builder = new PromptBuilder(loader, new AgentContextRenderer());
+
+        String prompt = builder.build(context());
+        int contextStart = prompt.lastIndexOf("\nBEGIN_AUDIT_CONTEXT\n");
+        int fieldValue = prompt.indexOf("Login requirement");
+        int contextEnd = prompt.lastIndexOf("\nEND_AUDIT_CONTEXT");
+
+        assertTrue(contextStart < fieldValue);
+        assertTrue(fieldValue < contextEnd);
+        assertFalse(prompt.contains("{{CONTEXT}}"));
+        assertFalse(prompt.contains("Metadata: not provided"));
+        assertFalse(prompt.contains("STATISTICS"));
     }
 
     private AgentContext context() {

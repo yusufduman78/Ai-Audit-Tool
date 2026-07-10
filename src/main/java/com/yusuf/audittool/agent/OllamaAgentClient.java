@@ -36,7 +36,7 @@ public class OllamaAgentClient implements AgentClient {
             OllamaGenerateResponse response = restClient.post()
                     .uri("/api/generate")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new OllamaGenerateRequest(properties.getModel(), prompt, false))
+                    .body(new OllamaGenerateRequest(properties.getModel(), prompt, false, false))
                     .retrieve()
                     .body(OllamaGenerateResponse.class);
 
@@ -50,7 +50,7 @@ public class OllamaAgentClient implements AgentClient {
         }
     }
 
-    private record OllamaGenerateRequest(String model, String prompt, boolean stream) {
+    private record OllamaGenerateRequest(String model, String prompt, boolean stream, boolean think) {
     }
 
     private record OllamaGenerateResponse(String response) {

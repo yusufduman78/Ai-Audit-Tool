@@ -31,7 +31,8 @@ class OllamaAgentClientTest {
                         {
                           "model": "qwen3:4b",
                           "prompt": "Review this issue",
-                          "stream": false
+                          "stream": false,
+                          "think": false
                         }
                         """))
                 .andRespond(withSuccess("""
