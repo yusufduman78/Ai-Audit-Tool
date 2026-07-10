@@ -8,6 +8,7 @@ public class AgentContext {
     private SourceInfo sourceInfo;
     private List<NormalizedField> activeFields = new ArrayList<>();
     private List<EmptyField> emptyFields = new ArrayList<>();
+    private CommentContext commentContext;
     private ChecklistContext checklistContext;
     private ContextStatistics statistics;
 
@@ -35,6 +36,14 @@ public class AgentContext {
         this.emptyFields = emptyFields;
     }
 
+    public CommentContext getCommentContext() {
+        return commentContext;
+    }
+
+    public void setCommentContext(CommentContext commentContext) {
+        this.commentContext = commentContext;
+    }
+
     public ChecklistContext getChecklistContext() {
         return checklistContext;
     }
@@ -51,4 +60,3 @@ public class AgentContext {
         this.statistics = statistics;
     }
 }
-

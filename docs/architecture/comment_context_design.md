@@ -65,16 +65,13 @@ Alan kararlari:
 Source type istenmez. Extractor asagidaki adaylari sirayla kontrol eder:
 
 1. `fields.comment.comments`
-2. `fields.comment.values`
-3. `comment.comments`
-4. `comment.values`
-5. `fields.comments`
-6. `comments`
-7. `values`, yalnizca ayni object pagination bilgisi tasiyorsa ve elemanlari comment benzeri gorunuyorsa
+2. `comment.comments`
+3. `fields.comments`
+4. `comments`
 
 Bu adaylardan biri comment koleksiyonu olarak kabul edilmeden once elemanlarinin comment benzeri oldugu dogrulanir. En az bir elemanda `body`, `renderedBody` veya rich-text body icindeki metin bulunmalidir.
 
-Bu kontrol, baska bir domain'e ait rastgele `comments` veya `values` alaninin yanlislikla Jira comment'i sayilmasini azaltir. `values` ancak `total`, `startAt`, `maxResults`, `isLast`, `offset`, `limit`, `hasMore` gibi pagination isaretlerinden en az birini tasiyan wrapper altinda degerlendirilir. Hicbir aday uymazsa `CommentContext.provided` false kalir ve generic normalize davranisi degismez.
+Bu kontrol, baska bir domain'e ait rastgele `comments` alaninin yanlislikla Jira comment'i sayilmasini azaltir. Hicbir aday uymazsa `CommentContext.provided` false kalir ve generic normalize davranisi degismez.
 
 Jira Data Center benzeri kayitlarda body dogrudan string olabilir. Jira Cloud v3 benzeri kayitlarda body rich-text document object olarak gelebilir. Her iki sekil de ayni `AuditComment.body` alanina donusturulur.
 
@@ -85,54 +82,32 @@ Body extraction sirasi:
 1. Bos olmayan string `body`
 2. Rich-text `body` icindeki `text` leaf degerleri, belge sirasiyla
 3. Bos olmayan string `renderedBody`, yalnizca body bulunamiyorsa
-4. Bos olmayan string `text`, yalnizca object zaten comment benzeri olarak dogrulanmissa
 
 Rich-text toplama sirasinda paragraph ve benzeri bloklar arasina satir sonu eklenir. HTML parse veya harici renderer MVP kapsaminda degildir. Metin cikarilamazsa comment atlanir; anlamsiz JSON veya URL prompta gonderilmez.
 
-Kimlik ve zaman fallback sirasi:
+Kimlik ve zaman alanlari MVP'de Jira'nin yaygin alan adlariyla okunur:
 
 ```text
-authorName: author.displayName -> author.name -> author.username -> author string -> unknown
-createdAt:  created -> creationDate -> timestamp -> null
-updatedAt:  updated -> updateDate -> null
+authorName: author.displayName -> author.name -> author string -> unknown
+createdAt:  created -> null
+updatedAt:  updated -> null
 ```
 
 E-posta, account id ve avatar fallback olarak kullanilmaz. Fallback alanlari yalnizca comment object'i daha once body ve kaynak yolu ile dogrulanmissa okunur.
 
 ## Pagination ve Secim Politikasi
 
-Jira issue comment cevabi `comments`, `maxResults`, `startAt`, `total` alanlarini tasiyabilir. Jira'nin diger sayfali response tiplerinde `values` ve `isLast` da gorulebilir. Bunlar extractor icin ipucudur, zorunlu sozlesme degildir.
+Jira issue comment cevabi `comments`, `maxResults`, `startAt`, `total` alanlarini tasiyabilir. MVP coverage hesabi yalnizca `startAt` ve `total` ile yapilir; `maxResults` bilgi olarak kalir.
 
-Wrapper uzerinde pagination bilgisi varsa extractor asagidaki fallbackleri okur:
+Hesapta collection icindeki ham eleman sayisi kullanilir; bos body nedeniyle sonradan atlanan comment'ler pagination bilgisini degistirmez.
 
-```text
-total:  total -> totalCount
-offset: startAt -> offset
-limit:  maxResults -> limit -> pageSize
-last:   isLast -> last -> hasMore (ters anlam)
-```
-
-Degerler ancak beklenen tipteyse kullanilir: sayilar negatif olmayan integer, son sayfa bilgisi boolean olmalidir. Metin veya belirsiz degerler coverage hesabi icin kullanilmaz.
-
-Coverage karari ihtiyatli verilir. Hesapta collection icindeki ham eleman sayisi kullanilir; bos body nedeniyle sonradan atlanan comment'ler pagination bilgisini degistirmez.
-
-- `FULL`: Local limit uygulanmamissa, baslangic offset'i acikca `0` ise ve ya `total` ham eleman sayisina esitse ya da `total` yokken son sayfa bilgisi acikca true ise.
-- `PARTIAL`: Offset `0`dan buyukse; son sayfa bilgisi false ise; `total`, `offset + ham eleman sayisi` degerinden buyukse; veya local comment limiti nedeniyle azaltma yapildiysa.
-- `UNKNOWN`: Pagination bilgisi yoksa, baslangic offset'i bilinmiyorsa veya pagination degerleri birbiriyle celisiyorsa.
-
-Celiski ornekleri `UNKNOWN` sonucunu zorunlu kilar: `isLast=true` iken `total` degeri `offset + ham eleman sayisi`ndan buyukse; `total` degeri offset ve donen eleman sayisindan daha kucukse; ya da ayni wrapper icinde farkli fallback alanlari farkli degerler verirse.
+- `FULL`: `startAt` acikca `0` ve `total` ham eleman sayisina esitse.
+- `PARTIAL`: `startAt` `0`dan buyukse veya `total` ham eleman sayisindan buyukse.
+- `UNKNOWN`: Bu iki alan yoksa, negatifse veya birbiriyle celisiyorsa.
 
 Bu kurallarda `FULL` yalnizca pozitif kanitla verilir. Ornegin yalnizca bes elemanli bir `comments` array'i geldiyse, bunun tum gecmis oldugu varsayilmaz; coverage `UNKNOWN` olur.
 
-Ilk uygulama icin comment secimi config ile sinirlanir:
-
-```properties
-audit.comments.max-included=20
-```
-
-Gecerli olursa comment'ler `createdAt` degerine gore en yeniden eskiye siralanir ve en yeni 20 comment tutulur. Tarih parse edilemiyorsa kaynak sirasi korunur. Limit asilirsa coverage `PARTIAL` olur.
-
-Bu limit token maliyetini kontrol eder. Ilk surumde LLM ile comment ozeti uretilmez; ikinci bir model cagrisi hem maliyeti hem de denetlenebilirligi zorlastirir.
+Comment limiti ve ek pagination fallbackleri, gercek kurum JSON ornekleri goruldugunde ayri bir degisiklik olarak eklenecektir. Ilk surum tum kullanilabilir comment'leri kaynak sirasiyla korur.
 
 ## Normalize Akisi
 
@@ -171,8 +146,9 @@ Ornek:
 
 ```text
 COMMENTS
-Coverage: PARTIAL
-Included: 20 of 65
+Coverage: FULL
+Included: 2
+Reported Total: 2
 
 - Comment
   Author: Reviewer A
@@ -214,11 +190,10 @@ Ilk test paketi asagidakileri kapsar:
 2. Cloud tarzi rich-text body ile coklu comment.
 3. Author, created, updated ve restricted visibility eslestirmesi.
 4. Bos veya yalnizca link iceren body'nin atlanmasi.
-5. Pagination bilgisinden `FULL`, `PARTIAL` ve `UNKNOWN` coverage uretimi.
-6. 20 comment limiti ve en yeni comment secimi.
-7. Comment path'lerinin active ve empty field listelerinden dislanmasi.
-8. Comment body icindeki prompt injection metninin sadece veri olarak render edilmesi.
-9. Comment hic yokken mevcut normalize davranisinin korunmasi.
+5. `startAt` ve `total` bilgisinden `FULL`, `PARTIAL` ve `UNKNOWN` coverage uretimi.
+6. Comment path'lerinin active ve empty field listelerinden dislanmasi.
+7. Comment body icindeki prompt injection metninin sadece veri olarak render edilmesi.
+8. Comment hic yokken mevcut normalize davranisinin korunmasi.
 
 ## Sonraki Uygulama Adimi
 
