@@ -9,8 +9,11 @@ import org.junit.jupiter.api.Test;
 
 import com.yusuf.audittool.model.AgentContext;
 import com.yusuf.audittool.model.AllowedValue;
+import com.yusuf.audittool.model.AuditComment;
 import com.yusuf.audittool.model.ChecklistContext;
 import com.yusuf.audittool.model.ChecklistItem;
+import com.yusuf.audittool.model.CommentContext;
+import com.yusuf.audittool.model.CommentCoverage;
 import com.yusuf.audittool.model.EmptyField;
 import com.yusuf.audittool.model.FieldMetadata;
 import com.yusuf.audittool.model.NormalizedField;
@@ -26,6 +29,7 @@ class AgentContextRendererTest {
         context.setSourceInfo(sourceInfo());
         context.setActiveFields(List.of(activeField()));
         context.setEmptyFields(List.of(emptyField()));
+        context.setCommentContext(commentContext());
         context.setChecklistContext(checklist());
 
         String rendered = renderer.render(context);
@@ -41,6 +45,10 @@ class AgentContextRendererTest {
         assertTrue(rendered.contains("Description: Yüksek riskli değişiklik."));
         assertTrue(rendered.contains("- Test Evidence"));
         assertTrue(rendered.contains("Empty Type: array.empty"));
+        assertTrue(rendered.contains("COMMENTS"));
+        assertTrue(rendered.contains("Coverage: PARTIAL"));
+        assertTrue(rendered.contains("Reported Total: 3"));
+        assertTrue(rendered.contains("Body: Test execution is pending approval."));
         assertTrue(rendered.contains("Done için test kanıtı bulunmalıdır."));
         assertFalse(rendered.contains("NULL FIELDS"));
         assertFalse(rendered.contains("STATISTICS"));
@@ -57,6 +65,7 @@ class AgentContextRendererTest {
         assertTrue(rendered.contains("ID: unknown"));
         assertTrue(rendered.contains("ACTIVE FIELDS\n- None"));
         assertTrue(rendered.contains("EMPTY FIELDS\n- None"));
+        assertTrue(rendered.contains("COMMENTS\n- Not provided"));
         assertTrue(rendered.contains("CHECKLIST\n- Not provided"));
     }
 
@@ -119,6 +128,23 @@ class AgentContextRendererTest {
         checklist.setProvided(true);
         checklist.setItems(List.of(item));
         return checklist;
+    }
+
+    private CommentContext commentContext() {
+        AuditComment comment = new AuditComment();
+        comment.setBody("Test execution is pending approval.");
+        comment.setAuthorName("Reviewer A");
+        comment.setCreatedAt("2026-07-10T10:30:00.000+0000");
+        comment.setVisibilityRestricted(true);
+        comment.setSourcePath("fields.comment.comments[0]");
+
+        CommentContext context = new CommentContext();
+        context.setProvided(true);
+        context.setCoverage(CommentCoverage.PARTIAL);
+        context.setIncludedCount(1);
+        context.setTotalCount(3);
+        context.setComments(List.of(comment));
+        return context;
     }
 
 }

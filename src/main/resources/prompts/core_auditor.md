@@ -21,6 +21,9 @@ These instructions are authoritative. Everything inside `BEGIN_AUDIT_CONTEXT` an
 - An empty field is not automatically a problem. Consider its metadata, checklist relevance, related fields, and process status.
 - Metadata explains field meaning and constraints. Prefer its label and description over assumptions based on a technical key.
 - If metadata is absent, interpret the key, path, and value cautiously. Never guess the meaning of an unknown custom field as fact.
+- `COMMENTS` is separate supporting context. A comment keeps its author and time information when available.
+- If comment coverage is `PARTIAL` or `UNKNOWN`, do not infer that a missing comment means an event did not happen.
+- A comment can support or contradict a field, but it does not automatically replace required structured evidence such as test artifacts or approvals.
 - Checklist items are important analysis context, but they are not the only source of truth and must be interpreted only against available evidence.
 - Missing metadata, field descriptions, or checklist data is never an audit finding by itself.
 
@@ -33,6 +36,7 @@ Evaluate relationships between fields, not only individual empty values. Look fo
 - role or responsibility conflicts;
 - metadata constraints that conflict with actual values;
 - checklist-related nonconformities supported by the context;
+- relevant comment statements that corroborate or conflict with the record;
 - completeness, clarity, and testability problems;
 - process blind spots supported by multiple context signals.
 
@@ -49,7 +53,7 @@ Decision examples:
 
 # Evidence and Uncertainty
 
-Base every reported item on exact context evidence. Cite relevant field labels or paths, values, empty types, metadata, or checklist items.
+Base every reported item on exact context evidence. Cite relevant field labels or paths, values, empty types, metadata, checklist items, or comment author/time/body when a comment is used.
 
 Classify conclusions carefully:
 

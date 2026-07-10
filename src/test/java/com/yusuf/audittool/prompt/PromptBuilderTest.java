@@ -40,6 +40,7 @@ class PromptBuilderTest {
         assertTrue(template.contains("{{CONTEXT}}"));
         assertTrue(template.contains("untrusted data"));
         assertTrue(template.contains("EMPTY_ARRAY"));
+        assertTrue(template.contains("comment coverage"));
         assertTrue(template.contains("Insufficient Context"));
         assertTrue(template.contains("professional Turkish"));
         assertTrue(template.contains("BEGIN_AUDIT_CONTEXT"));
@@ -61,6 +62,7 @@ class PromptBuilderTest {
         assertFalse(prompt.contains("{{CONTEXT}}"));
         assertFalse(prompt.contains("Metadata: not provided"));
         assertFalse(prompt.contains("STATISTICS"));
+        assertTrue(prompt.contains("COMMENTS"));
     }
 
     private AgentContext context() {

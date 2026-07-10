@@ -6,8 +6,10 @@ import org.springframework.stereotype.Component;
 
 import com.yusuf.audittool.model.AllowedValue;
 import com.yusuf.audittool.model.AgentContext;
+import com.yusuf.audittool.model.AuditComment;
 import com.yusuf.audittool.model.ChecklistContext;
 import com.yusuf.audittool.model.ChecklistItem;
+import com.yusuf.audittool.model.CommentContext;
 import com.yusuf.audittool.model.EmptyField;
 import com.yusuf.audittool.model.FieldMetadata;
 import com.yusuf.audittool.model.NormalizedField;
@@ -22,6 +24,7 @@ public class AgentContextRenderer {
         renderSourceInfo(context.getSourceInfo(), output);
         renderActiveFields(context.getActiveFields(), output);
         renderEmptyFields(context.getEmptyFields(), output);
+        renderComments(context.getCommentContext(), output);
         renderChecklist(context.getChecklistContext(), output);
 
         return output.toString().trim();
@@ -119,6 +122,39 @@ public class AgentContextRenderer {
         output.append('\n');
     }
 
+    private void renderComments(CommentContext commentContext, StringBuilder output) {
+        output.append("COMMENTS\n");
+        if (commentContext == null || !commentContext.isProvided()) {
+            output.append("- Not provided\n\n");
+            return;
+        }
+
+        appendLine(output, "Coverage", text(commentContext.getCoverage()));
+        appendLine(output, "Included", String.valueOf(commentContext.getIncludedCount()));
+        if (commentContext.getTotalCount() != null) {
+            appendLine(output, "Reported Total", String.valueOf(commentContext.getTotalCount()));
+        }
+
+        List<AuditComment> comments = commentContext.getComments();
+        if (comments == null || comments.isEmpty()) {
+            output.append("- Provided but empty\n\n");
+            return;
+        }
+
+        for (AuditComment comment : comments) {
+            output.append("- Comment\n");
+            appendIndented(output, "Author", comment.getAuthorName());
+            appendIndented(output, "Created", comment.getCreatedAt());
+            appendIndented(output, "Updated", comment.getUpdatedAt());
+            if (Boolean.TRUE.equals(comment.getVisibilityRestricted())) {
+                appendIndented(output, "Visibility", "restricted");
+            }
+            appendIndented(output, "Body", comment.getBody());
+            appendIndented(output, "Path", comment.getSourcePath());
+        }
+        output.append('\n');
+    }
+
     private String displayName(String fallback, FieldMetadata metadata) {
         if (metadata != null && hasText(metadata.getName())) {
             return metadata.getName();
@@ -143,6 +179,10 @@ public class AgentContextRenderer {
     }
 
     private String text(Boolean value) {
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private String text(Object value) {
         return value == null ? null : String.valueOf(value);
     }
 
