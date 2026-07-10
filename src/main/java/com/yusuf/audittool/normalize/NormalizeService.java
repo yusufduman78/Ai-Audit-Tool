@@ -12,6 +12,7 @@ public class NormalizeService {
 
     private final GenericJsonWalker jsonWalker;
     private final FieldClassifier fieldClassifier;
+    private final CommentExtractor commentExtractor;
     private final SourceInfoExtractor sourceInfoExtractor;
     private final ChecklistMapper checklistMapper;
     private final MetadataMapper metadataMapper;
@@ -19,12 +20,14 @@ public class NormalizeService {
     public NormalizeService(
             GenericJsonWalker jsonWalker,
             FieldClassifier fieldClassifier,
+            CommentExtractor commentExtractor,
             SourceInfoExtractor sourceInfoExtractor,
             ChecklistMapper checklistMapper,
             MetadataMapper metadataMapper
     ) {
         this.jsonWalker = jsonWalker;
         this.fieldClassifier = fieldClassifier;
+        this.commentExtractor = commentExtractor;
         this.sourceInfoExtractor = sourceInfoExtractor;
         this.checklistMapper = checklistMapper;
         this.metadataMapper = metadataMapper;
@@ -35,7 +38,11 @@ public class NormalizeService {
             throw new IllegalArgumentException("Payload is required.");
         }
 
-        FieldClassification classification = fieldClassifier.classify(jsonWalker.walk(request.getPayload()));
+        CommentExtraction commentExtraction = commentExtractor.extract(request.getPayload());
+        FieldClassification classification = fieldClassifier.classify(
+                jsonWalker.walk(request.getPayload()),
+                commentExtraction.excludedPathPrefixes()
+        );
         metadataMapper.enrich(
                 classification.getActiveFields(),
                 classification.getEmptyFields(),
@@ -48,6 +55,7 @@ public class NormalizeService {
         context.setSourceInfo(sourceInfoExtractor.extract(request.getPayload()));
         context.setActiveFields(classification.getActiveFields());
         context.setEmptyFields(classification.getEmptyFields());
+        context.setCommentContext(commentExtraction.commentContext());
         context.setChecklistContext(checklistMapper.map(request.getChecklist()));
         context.setStatistics(classification.getStatistics());
 

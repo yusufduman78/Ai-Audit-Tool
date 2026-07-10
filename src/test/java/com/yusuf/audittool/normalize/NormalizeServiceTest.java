@@ -3,6 +3,7 @@ package com.yusuf.audittool.normalize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
@@ -23,6 +24,7 @@ class NormalizeServiceTest {
     private final NormalizeService normalizeService = new NormalizeService(
             new GenericJsonWalker(),
             new FieldClassifier(),
+            new CommentExtractor(),
             new SourceInfoExtractor(),
             new ChecklistMapper(),
             new MetadataMapper()
@@ -58,6 +60,7 @@ class NormalizeServiceTest {
         assertEquals(1, context.getStatistics().getSkippedNoiseFieldCount());
         assertEquals(0, context.getStatistics().getMetadataMatchedCount());
         assertEquals(5, context.getStatistics().getMetadataMissingCount());
+        assertFalse(context.getCommentContext().isProvided());
         assertFalse(context.getChecklistContext().isProvided());
     }
 
@@ -116,6 +119,37 @@ class NormalizeServiceTest {
         assertEquals(true, context.getChecklistContext().isProvided());
         assertEquals(2, context.getChecklistContext().getItems().size());
         assertEquals("Requirement açık olmalıdır.", context.getChecklistContext().getItems().get(0).getText());
+    }
+
+    @Test
+    void extractsCommentsWithoutAddingTheirChildrenAsGenericFields() throws Exception {
+        AnalyzeRequest request = request("""
+                {
+                  "key": "REQ-101",
+                  "fields": {
+                    "summary": "Login requirement",
+                    "comment": {
+                      "startAt": 0,
+                      "total": 1,
+                      "comments": [
+                        {
+                          "body": "Test execution is pending approval.",
+                          "author": { "displayName": "Reviewer A" },
+                          "created": "2026-07-10T10:30:00.000+0000"
+                        }
+                      ]
+                    }
+                  }
+                }
+                """);
+
+        AgentContext context = normalizeService.normalize(request);
+
+        assertEquals(List.of("key", "fields.summary"), activePaths(context));
+        assertTrue(context.getCommentContext().isProvided());
+        assertEquals("Test execution is pending approval.", context.getCommentContext().getComments().getFirst().getBody());
+        assertEquals("Reviewer A", context.getCommentContext().getComments().getFirst().getAuthorName());
+        assertEquals(2, context.getStatistics().getActiveFieldCount());
     }
 
     @Test

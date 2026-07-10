@@ -30,12 +30,20 @@ public class FieldClassifier {
     );
 
     public FieldClassification classify(List<RawField> rawFields) {
+        return classify(rawFields, Set.of());
+    }
+
+    public FieldClassification classify(List<RawField> rawFields, Set<String> excludedPathPrefixes) {
         FieldClassification classification = new FieldClassification();
         ContextStatistics statistics = classification.getStatistics();
         Set<String> consumedSimpleValuePaths = new HashSet<>();
         Set<String> skippedNoisePaths = new HashSet<>();
 
         for (RawField rawField : rawFields) {
+            if (isExcluded(rawField, excludedPathPrefixes)) {
+                continue;
+            }
+
             if (consumedSimpleValuePaths.contains(rawField.getPath())) {
                 continue;
             }
@@ -94,6 +102,18 @@ public class FieldClassifier {
         statistics.setActiveFieldCount(classification.getActiveFields().size());
         statistics.setEmptyFieldCount(classification.getEmptyFields().size());
         return classification;
+    }
+
+    private boolean isExcluded(RawField rawField, Set<String> excludedPathPrefixes) {
+        if (rawField == null || rawField.getPath() == null || excludedPathPrefixes == null) {
+            return false;
+        }
+
+        return excludedPathPrefixes.stream()
+                .filter(prefix -> prefix != null && !prefix.isBlank())
+                .anyMatch(prefix -> rawField.getPath().equals(prefix)
+                        || rawField.getPath().startsWith(prefix + ".")
+                        || rawField.getPath().startsWith(prefix + "["));
     }
 
     private boolean isNoise(RawField rawField) {
