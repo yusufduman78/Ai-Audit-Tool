@@ -3,6 +3,7 @@
 Bu klasor, LLM davranisini degerlendirmek icin kullanilan request fixture'larini ve expected-result sozlesmelerini icerir.
 
 - `scenarios/fixtures/`: `/api/normalize` ve `/api/analyze` endpointlerine gonderilebilen `AnalyzeRequest` JSON dosyalari.
+- `scenarios/definitions/`: Generator'un okuyacagi buyuk veya varyasyonlu senaryo tanimlari.
 - `scenarios/expected/`: Modelin gormedigi, beklenen audit davranisini tanimlayan sozlesmeler.
 - `scenarios/generated/`: Python generator eklendiginde olusacak varyasyonlar icin ayrilmistir.
 

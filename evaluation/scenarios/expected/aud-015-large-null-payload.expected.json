@@ -1,0 +1,30 @@
+{
+  "scenarioId": "AUD-015",
+  "purpose": "Verify that a large null-heavy payload preserves meaningful context without inflating the prompt.",
+  "requiredFindings": [],
+  "requiredResult": "NO_SUPPORTED_FINDING",
+  "normalizationExpectations": {
+    "topLevelFieldCount": 2000,
+    "minimumNullFieldCount": 1958,
+    "expectedCommentCoverage": "FULL",
+    "requiredActivePaths": [
+      "fields.summary",
+      "fields.status",
+      "fields.customfield_20007"
+    ],
+    "forbiddenPromptPathPrefixes": [
+      "fields.customfield_40000",
+      "fields.customfield_41957"
+    ]
+  },
+  "forbiddenFindings": [
+    "DONE_WITHOUT_EVIDENCE",
+    "MISSING_METADATA",
+    "MISSING_CHECKLIST",
+    "NULL_FIELD_AS_AUDIT_PROBLEM"
+  ],
+  "notes": [
+    "Empty fields are intentionally unknown optional custom fields and must not create findings without metadata or checklist support.",
+    "The generator must preserve the fixed active fields and produce exactly the configured top-level field counts."
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "scenarioId": "AUD-015",
+  "seed": 20260711,
+  "profile": "typical-institution",
+  "purpose": "Generate a realistic Jira-like payload where most configured fields are null and only a small subset is meaningful.",
+  "topLevelFieldCounts": {
+    "total": 2000,
+    "active": 30,
+    "emptyString": 2,
+    "emptyArray": 2,
+    "emptyObject": 1,
+    "null": 1958,
+    "noise": 6,
+    "commentContainer": 1
+  },
+  "entity": {
+    "key": "LARGE-BASE-001",
+    "summary": "Authentication timeout requirement"
+  },
+  "fixedActiveFields": {
+    "status": {
+      "name": "Done"
+    },
+    "issuetype": {
+      "name": "System Requirement"
+    },
+    "priority": {
+      "name": "High"
+    },
+    "customfield_20001": {
+      "value": "System Requirement"
+    },
+    "customfield_20004": "SYS-REQ-245",
+    "customfield_20006": {
+      "value": "Test"
+    },
+    "customfield_20007": "Automated test run TR-900 passed for timeout and lockout scenarios.",
+    "customfield_20201": {
+      "value": "Internal"
+    },
+    "customfield_20202": {
+      "value": "High"
+    },
+    "customfield_20205": {
+      "value": "Integration Test"
+    }
+  },
+  "additionalActiveFields": {
+    "count": 19,
+    "fieldIdStart": 21000,
+    "valueTemplate": "Supporting context value {index}"
+  },
+  "emptyFields": {
+    "emptyString": [
+      "customfield_22001",
+      "customfield_22002"
+    ],
+    "emptyArray": [
+      "customfield_22003",
+      "customfield_22004"
+    ],
+    "emptyObject": [
+      "customfield_22005"
+    ]
+  },
+  "nullFields": {
+    "fieldIdStart": 40000,
+    "count": 1958
+  },
+  "noiseFields": {
+    "self": "https://jira.example.local/rest/api/2/issue/LARGE-BASE-001",
+    "avatarUrl": "https://jira.example.local/avatar/10003.png",
+    "iconUrl": "https://jira.example.local/icon.png",
+    "expand": "names,schema",
+    "schema": {
+      "type": "string"
+    },
+    "operations": []
+  },
+  "comments": {
+    "startAt": 0,
+    "total": 2,
+    "comments": [
+      {
+        "body": "Verification evidence was reviewed and accepted.",
+        "author": {
+          "displayName": "Reviewer D"
+        },
+        "created": "2026-07-10T09:00:00.000+0000"
+      },
+      {
+        "body": "No additional impact was identified for the current baseline.",
+        "author": {
+          "displayName": "Systems Engineer"
+        },
+        "created": "2026-07-10T11:00:00.000+0000"
+      }
+    ]
+  },
+  "metadata": {
+    "customfield_20001": "Requirement Type",
+    "customfield_20004": "Requirement Traceability",
+    "customfield_20006": "Verification Method",
+    "customfield_20007": "Verification Evidence",
+    "customfield_20201": "Security Classification",
+    "customfield_20202": "Criticality Level",
+    "customfield_20205": "Operational Environment"
+  },
+  "checklist": [
+    "Done records must include verification evidence.",
+    "System requirements must define a verification method.",
+    "System requirements must include traceability information."
+  ]
+}
