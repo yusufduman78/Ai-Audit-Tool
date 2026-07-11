@@ -9,6 +9,7 @@ public class OllamaProperties {
 
     private String url;
     private String model;
+    private int contextWindow = 8192;
     private int maxOutputTokens = 1200;
 
     public String getUrl() {
@@ -25,6 +26,14 @@ public class OllamaProperties {
 
     public void setModel(String model) {
         this.model = model;
+    }
+
+    public int getContextWindow() {
+        return contextWindow;
+    }
+
+    public void setContextWindow(int contextWindow) {
+        this.contextWindow = contextWindow;
     }
 
     public int getMaxOutputTokens() {

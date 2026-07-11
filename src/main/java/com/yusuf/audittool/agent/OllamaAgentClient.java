@@ -43,7 +43,10 @@ public class OllamaAgentClient implements AgentClient {
                             prompt,
                             false,
                             false,
-                            Map.of("num_predict", properties.getMaxOutputTokens())
+                            Map.of(
+                                    "num_ctx", properties.getContextWindow(),
+                                    "num_predict", properties.getMaxOutputTokens()
+                            )
                     ))
                     .retrieve()
                     .body(OllamaGenerateResponse.class);
