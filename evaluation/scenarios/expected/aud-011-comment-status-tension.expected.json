@@ -1,0 +1,25 @@
+{
+  "scenarioId": "AUD-011",
+  "purpose": "Recognize tension between a completed status and a comment without treating the comment as conclusive timeline evidence.",
+  "requiredFindings": [],
+  "requiredObservations": [
+    {
+      "code": "COMMENT_STATUS_TENSION",
+      "severity": ["Medium"],
+      "evidencePaths": [
+        "fields.status",
+        "fields.comment.comments[0]"
+      ],
+      "supportingComment": "Test execution is pending approval."
+    }
+  ],
+  "forbiddenFindings": [
+    "DONE_WITHOUT_EVIDENCE",
+    "STATUS_PROVEN_INVALID",
+    "MISSING_COMMENT_EVIDENCE"
+  ],
+  "notes": [
+    "Verification Evidence is present, so the Done status is not unsupported by itself.",
+    "The comment timestamp is known, but the status transition timestamp is not available. The output must remain an observation."
+  ]
+}

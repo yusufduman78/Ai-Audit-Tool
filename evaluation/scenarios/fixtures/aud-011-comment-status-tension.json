@@ -1,0 +1,51 @@
+{
+  "payload": {
+    "key": "COM-BASE-001",
+    "fields": {
+      "summary": "User authentication requirement",
+      "status": {
+        "name": "Done"
+      },
+      "customfield_20006": {
+        "value": "Test"
+      },
+      "customfield_20007": "Automated test run TR-789 passed for authentication timeout scenarios.",
+      "customfield_29990": null,
+      "comment": {
+        "startAt": 0,
+        "maxResults": 50,
+        "total": 1,
+        "comments": [
+          {
+            "id": "30001",
+            "body": "Test execution is pending approval.",
+            "author": {
+              "displayName": "Reviewer C"
+            },
+            "created": "2026-07-10T09:15:00.000+0000"
+          }
+        ]
+      }
+    }
+  },
+  "metadata": {
+    "customfield_20006": {
+      "fieldId": "customfield_20006",
+      "name": "Verification Method",
+      "schema": {
+        "type": "option"
+      }
+    },
+    "customfield_20007": {
+      "fieldId": "customfield_20007",
+      "name": "Verification Evidence",
+      "schema": {
+        "type": "string"
+      },
+      "description": "Evidence showing that the requirement was verified."
+    }
+  },
+  "checklist": [
+    "Done records must include verification evidence."
+  ]
+}
