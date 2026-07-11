@@ -1,0 +1,26 @@
+{
+  "scenarioId": "AUD-013",
+  "purpose": "Detect an approved requirement change that has no documented impact analysis.",
+  "requiredFindings": [
+    {
+      "code": "APPROVED_CHANGE_WITHOUT_IMPACT_ANALYSIS",
+      "severity": ["High"],
+      "evidencePaths": [
+        "fields.customfield_20107",
+        "fields.customfield_20105"
+      ],
+      "supportingChecklist": "Approved change records must include an impact analysis.",
+      "supportingComment": "The impact analysis document is still pending."
+    }
+  ],
+  "optionalObservations": [],
+  "forbiddenFindings": [
+    "MISSING_METADATA",
+    "MISSING_CHECKLIST",
+    "SAFETY_CHANGE_WITHOUT_VERIFICATION_IMPACT"
+  ],
+  "notes": [
+    "Verification Impact is present, so the safety-related checklist item is not expected to fail.",
+    "Cause of Change provides context but the required finding is based on approval, empty impact analysis and checklist evidence."
+  ]
+}
