@@ -32,7 +32,10 @@ class OllamaAgentClientTest {
                           "model": "qwen3:4b",
                           "prompt": "Review this issue",
                           "stream": false,
-                          "think": false
+                          "think": false,
+                          "options": {
+                            "num_predict": 1200
+                          }
                         }
                         """))
                 .andRespond(withSuccess("""
@@ -70,6 +73,7 @@ class OllamaAgentClientTest {
         OllamaProperties properties = new OllamaProperties();
         properties.setUrl("http://localhost:11434");
         properties.setModel("qwen3:4b");
+        properties.setMaxOutputTokens(1200);
         return properties;
     }
 }

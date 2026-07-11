@@ -1,5 +1,7 @@
 package com.yusuf.audittool.agent;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -36,7 +38,13 @@ public class OllamaAgentClient implements AgentClient {
             OllamaGenerateResponse response = restClient.post()
                     .uri("/api/generate")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new OllamaGenerateRequest(properties.getModel(), prompt, false, false))
+                    .body(new OllamaGenerateRequest(
+                            properties.getModel(),
+                            prompt,
+                            false,
+                            false,
+                            Map.of("num_predict", properties.getMaxOutputTokens())
+                    ))
                     .retrieve()
                     .body(OllamaGenerateResponse.class);
 
@@ -50,7 +58,13 @@ public class OllamaAgentClient implements AgentClient {
         }
     }
 
-    private record OllamaGenerateRequest(String model, String prompt, boolean stream, boolean think) {
+    private record OllamaGenerateRequest(
+            String model,
+            String prompt,
+            boolean stream,
+            boolean think,
+            Map<String, Integer> options
+    ) {
     }
 
     private record OllamaGenerateResponse(String response) {

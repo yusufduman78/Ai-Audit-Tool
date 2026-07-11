@@ -9,6 +9,7 @@ public class OllamaProperties {
 
     private String url;
     private String model;
+    private int maxOutputTokens = 1200;
 
     public String getUrl() {
         return url;
@@ -24,5 +25,13 @@ public class OllamaProperties {
 
     public void setModel(String model) {
         this.model = model;
+    }
+
+    public int getMaxOutputTokens() {
+        return maxOutputTokens;
+    }
+
+    public void setMaxOutputTokens(int maxOutputTokens) {
+        this.maxOutputTokens = maxOutputTokens;
     }
 }

@@ -46,9 +46,185 @@
     }
   },
   "additionalActiveFields": {
-    "count": 19,
-    "fieldIdStart": 21000,
-    "valueTemplate": "Supporting context value {index}"
+    "fields": [
+      {
+        "fieldId": "customfield_21000",
+        "value": {
+          "value": "Access Control"
+        },
+        "metadata": {
+          "name": "Requirement Domain",
+          "schemaType": "option",
+          "description": "Primary engineering domain addressed by the requirement."
+        }
+      },
+      {
+        "fieldId": "customfield_21001",
+        "value": {
+          "value": "System"
+        },
+        "metadata": {
+          "name": "Requirement Allocation",
+          "schemaType": "option",
+          "description": "System level to which the requirement is allocated."
+        }
+      },
+      {
+        "fieldId": "customfield_21002",
+        "value": {
+          "value": "Functional"
+        },
+        "metadata": {
+          "name": "Requirement Class",
+          "schemaType": "option"
+        }
+      },
+      {
+        "fieldId": "customfield_21003",
+        "value": {
+          "value": "Baselined"
+        },
+        "metadata": {
+          "name": "Requirement Maturity",
+          "schemaType": "option"
+        }
+      },
+      {
+        "fieldId": "customfield_21004",
+        "value": {
+          "value": "Not Safety Critical"
+        },
+        "metadata": {
+          "name": "Safety Relevance",
+          "schemaType": "option",
+          "description": "Safety relevance assigned during requirement assessment."
+        }
+      },
+      {
+        "fieldId": "customfield_21005",
+        "value": {
+          "value": "Security Relevant"
+        },
+        "metadata": {
+          "name": "Cybersecurity Relevance",
+          "schemaType": "option"
+        }
+      },
+      {
+        "fieldId": "customfield_21006",
+        "value": "Authentication and session management",
+        "metadata": {
+          "name": "Interface Scope",
+          "schemaType": "string"
+        }
+      },
+      {
+        "fieldId": "customfield_21007",
+        "value": {
+          "value": "Normal Operation"
+        },
+        "metadata": {
+          "name": "Operational Mode",
+          "schemaType": "option"
+        }
+      },
+      {
+        "fieldId": "customfield_21008",
+        "value": "Session management service",
+        "metadata": {
+          "name": "Allocated Component",
+          "schemaType": "string"
+        }
+      },
+      {
+        "fieldId": "customfield_21009",
+        "value": {
+          "value": "System"
+        },
+        "metadata": {
+          "name": "Verification Level",
+          "schemaType": "option"
+        }
+      },
+      {
+        "fieldId": "customfield_21010",
+        "value": "Representative integration environment",
+        "metadata": {
+          "name": "Test Environment",
+          "schemaType": "string"
+        }
+      },
+      {
+        "fieldId": "customfield_21011",
+        "value": "Session control configuration",
+        "metadata": {
+          "name": "Configuration Item",
+          "schemaType": "string"
+        }
+      },
+      {
+        "fieldId": "customfield_21012",
+        "value": "Inactivity is detectable by the application.",
+        "metadata": {
+          "name": "Assumption",
+          "schemaType": "string"
+        }
+      },
+      {
+        "fieldId": "customfield_21013",
+        "value": "Identity provider availability",
+        "metadata": {
+          "name": "Dependency",
+          "schemaType": "string"
+        }
+      },
+      {
+        "fieldId": "customfield_21014",
+        "value": "An inactive user session is ended under the configured timeout policy.",
+        "metadata": {
+          "name": "Acceptance Criterion",
+          "schemaType": "string"
+        }
+      },
+      {
+        "fieldId": "customfield_21015",
+        "value": {
+          "value": "Reviewed"
+        },
+        "metadata": {
+          "name": "Review State",
+          "schemaType": "option"
+        }
+      },
+      {
+        "fieldId": "customfield_21016",
+        "value": {
+          "value": "Controlled"
+        },
+        "metadata": {
+          "name": "Documentation State",
+          "schemaType": "option"
+        }
+      },
+      {
+        "fieldId": "customfield_21017",
+        "value": {
+          "value": "No Change Requested"
+        },
+        "metadata": {
+          "name": "Change Applicability",
+          "schemaType": "option"
+        }
+      },
+      {
+        "fieldId": "customfield_21018",
+        "value": "Internal operational environment",
+        "metadata": {
+          "name": "Deployment Scope",
+          "schemaType": "string"
+        }
+      }
+    ]
   },
   "emptyFields": {
     "emptyString": [
@@ -98,13 +274,60 @@
     ]
   },
   "metadata": {
-    "customfield_20001": "Requirement Type",
-    "customfield_20004": "Requirement Traceability",
-    "customfield_20006": "Verification Method",
-    "customfield_20007": "Verification Evidence",
-    "customfield_20201": "Security Classification",
-    "customfield_20202": "Criticality Level",
-    "customfield_20205": "Operational Environment"
+    "customfield_20001": {
+      "name": "Requirement Type",
+      "schemaType": "option",
+      "allowedValues": [
+        "System Requirement",
+        "Interface Requirement"
+      ]
+    },
+    "customfield_20004": {
+      "name": "Requirement Traceability",
+      "schemaType": "string",
+      "description": "Reference to the parent or allocated system requirement."
+    },
+    "customfield_20006": {
+      "name": "Verification Method",
+      "schemaType": "option",
+      "allowedValues": [
+        "Test",
+        "Analysis",
+        "Inspection"
+      ]
+    },
+    "customfield_20007": {
+      "name": "Verification Evidence",
+      "schemaType": "string",
+      "description": "Evidence showing that the requirement was verified."
+    },
+    "customfield_20201": {
+      "name": "Security Classification",
+      "schemaType": "option",
+      "allowedValues": [
+        "Internal",
+        "Restricted",
+        "Public"
+      ]
+    },
+    "customfield_20202": {
+      "name": "Criticality Level",
+      "schemaType": "option",
+      "allowedValues": [
+        "High",
+        "Medium",
+        "Low"
+      ]
+    },
+    "customfield_20205": {
+      "name": "Operational Environment",
+      "schemaType": "option",
+      "allowedValues": [
+        "Integration Test",
+        "Laboratory",
+        "Operational"
+      ]
+    }
   },
   "checklist": [
     "Done records must include verification evidence.",

@@ -50,3 +50,6 @@ temp/
 
 # Local planning notes
 docs/architecture/generic_ai_audit_tool_mimari_plan.md
+
+# Local evaluation experiments and generated LLM drafts
+evaluation/local/
