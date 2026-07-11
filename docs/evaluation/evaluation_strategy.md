@@ -127,7 +127,7 @@ evaluation/
   README.md
   pyproject.toml
   scenarios/
-    catalog/
+    fixtures/
     generated/
     expected/
   generator/
@@ -142,6 +142,8 @@ evaluation/
   runs/       # gitignored
   reports/    # gitignored
 ```
+
+`fixtures/` elle tanimlanan referans requestleri, `generated/` ise ileride Python aracinin uretecegi varyasyonlari tasir.
 
 Python burada Java uygulamasinin runtime bagimliligi degildir. Veri uretimi, endpoint cagrisi ve raporlama icin ayri bir gelistirme aracidir. Ilk surumde standart kutuphane yeterli tutulur; ihtiyac dogarsa yalnizca gerekcelendirilmis ek bagimliliklar eklenir.
 

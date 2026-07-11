@@ -1,0 +1,25 @@
+{
+  "scenarioId": "AUD-001",
+  "purpose": "Detect missing verification evidence for a record marked Done.",
+  "requiredFindings": [
+    {
+      "code": "DONE_WITHOUT_EVIDENCE",
+      "severity": ["High"],
+      "evidencePaths": [
+        "fields.status",
+        "fields.customfield_20007"
+      ],
+      "supportingComment": "Test execution is pending approval."
+    }
+  ],
+  "optionalObservations": [],
+  "forbiddenFindings": [
+    "MISSING_METADATA",
+    "MISSING_CHECKLIST",
+    "ROLE_CONFLICT"
+  ],
+  "notes": [
+    "The comment supports the missing-evidence concern but does not replace structured verification evidence.",
+    "Null custom fields must not appear as findings."
+  ]
+}

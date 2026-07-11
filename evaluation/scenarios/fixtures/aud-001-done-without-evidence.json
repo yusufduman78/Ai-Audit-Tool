@@ -1,0 +1,86 @@
+{
+  "payload": {
+    "key": "REQ-BASE-001",
+    "fields": {
+      "summary": "User authentication requirement",
+      "status": {
+        "name": "Done"
+      },
+      "customfield_20001": {
+        "value": "System Requirement"
+      },
+      "customfield_20006": {
+        "value": "Test"
+      },
+      "customfield_20007": [],
+      "customfield_20202": {
+        "value": "High"
+      },
+      "customfield_29990": null,
+      "customfield_29991": null,
+      "self": "https://jira.example.local/rest/api/2/issue/REQ-BASE-001",
+      "comment": {
+        "startAt": 0,
+        "maxResults": 50,
+        "total": 1,
+        "comments": [
+          {
+            "id": "10001",
+            "body": "Test execution is pending approval.",
+            "author": {
+              "displayName": "Reviewer A"
+            },
+            "created": "2026-07-10T10:30:00.000+0000"
+          }
+        ]
+      }
+    }
+  },
+  "metadata": {
+    "customfield_20001": {
+      "fieldId": "customfield_20001",
+      "name": "Requirement Type",
+      "schema": {
+        "type": "option"
+      },
+      "allowedValues": [
+        {
+          "id": "30001",
+          "value": "System Requirement"
+        },
+        {
+          "id": "30002",
+          "value": "Software Requirement"
+        }
+      ]
+    },
+    "customfield_20006": {
+      "fieldId": "customfield_20006",
+      "name": "Verification Method",
+      "schema": {
+        "type": "option"
+      },
+      "description": "Method planned to verify the requirement."
+    },
+    "customfield_20007": {
+      "fieldId": "customfield_20007",
+      "name": "Verification Evidence",
+      "schema": {
+        "type": "array"
+      },
+      "description": "Evidence showing that the requirement was verified."
+    },
+    "customfield_20202": {
+      "fieldId": "customfield_20202",
+      "name": "Criticality Level",
+      "schema": {
+        "type": "option"
+      },
+      "description": "Relative criticality of the requirement."
+    }
+  },
+  "checklist": [
+    "Done records must include verification evidence.",
+    "System requirements must define a verification method."
+  ]
+}

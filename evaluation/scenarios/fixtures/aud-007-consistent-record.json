@@ -1,0 +1,74 @@
+{
+  "payload": {
+    "key": "REQ-BASE-002",
+    "fields": {
+      "summary": "User authentication requirement",
+      "status": {
+        "name": "Done"
+      },
+      "customfield_20001": {
+        "value": "System Requirement"
+      },
+      "customfield_20004": "SYS-REQ-245",
+      "customfield_20006": {
+        "value": "Test"
+      },
+      "customfield_20007": "Automated test run TR-456 passed for valid and invalid credentials.",
+      "customfield_29990": null,
+      "customfield_29991": null,
+      "avatarUrl": "https://jira.example.local/avatar/10002.png",
+      "comment": {
+        "startAt": 0,
+        "maxResults": 50,
+        "total": 1,
+        "comments": [
+          {
+            "id": "10002",
+            "body": "Verification evidence was reviewed and accepted.",
+            "author": {
+              "displayName": "Reviewer B"
+            },
+            "created": "2026-07-10T14:30:00.000+0000"
+          }
+        ]
+      }
+    }
+  },
+  "metadata": {
+    "customfield_20001": {
+      "fieldId": "customfield_20001",
+      "name": "Requirement Type",
+      "schema": {
+        "type": "option"
+      }
+    },
+    "customfield_20004": {
+      "fieldId": "customfield_20004",
+      "name": "Requirement Traceability",
+      "schema": {
+        "type": "string"
+      },
+      "description": "Reference to the parent or allocated system requirement."
+    },
+    "customfield_20006": {
+      "fieldId": "customfield_20006",
+      "name": "Verification Method",
+      "schema": {
+        "type": "option"
+      }
+    },
+    "customfield_20007": {
+      "fieldId": "customfield_20007",
+      "name": "Verification Evidence",
+      "schema": {
+        "type": "string"
+      },
+      "description": "Evidence showing that the requirement was verified."
+    }
+  },
+  "checklist": [
+    "Done records must include verification evidence.",
+    "System requirements must define a verification method.",
+    "System requirements must include traceability information."
+  ]
+}

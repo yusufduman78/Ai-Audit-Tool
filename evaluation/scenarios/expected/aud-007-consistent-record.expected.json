@@ -1,0 +1,20 @@
+{
+  "scenarioId": "AUD-007",
+  "purpose": "Confirm that a complete and internally consistent record does not produce unsupported findings.",
+  "requiredFindings": [],
+  "requiredResult": "NO_SUPPORTED_FINDING",
+  "optionalObservations": [
+    "LOW_VALUE_IMPROVEMENT"
+  ],
+  "forbiddenFindings": [
+    "DONE_WITHOUT_EVIDENCE",
+    "MISSING_ACCEPTANCE_CRITERIA",
+    "MISSING_METADATA",
+    "MISSING_CHECKLIST",
+    "CHECKLIST_DIRECT_CONFLICT"
+  ],
+  "notes": [
+    "The verification comment is supporting context, not the only evidence.",
+    "Null and avatar URL values must not become audit findings."
+  ]
+}
