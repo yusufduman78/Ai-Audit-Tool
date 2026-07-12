@@ -105,34 +105,7 @@ Return only a valid JSON object. Do not use Markdown, code fences, explanatory t
 
 Use empty arrays when there are no findings or observations. Preserve field names and values as they appear in the context. Do not repeat the same issue in multiple sections.
 
-Choose the report classification before writing. Return only the final report: do not include drafts, notes, self-corrections, alternative answers, or explanations of how the report should be rewritten. If the report contains any finding, never write the no-finding sentence anywhere in the response.
-
-Use these sections:
-
-## Ozet
-
-Give a short overall assessment grounded in the supplied record.
-
-## Bulgular
-
-For each supported finding, include:
-
-- `Baslik`
-- `Kategori`
-- `Onem`: Low / Medium / High
-- `Kanit`: exact context evidence
-- `Kisa gerekce`: a brief, auditable explanation
-- `Onerilen aksiyon`: a specific next step tied to the finding
-
-When no finding is supported, return an empty `findings` array. Do not create a placeholder finding.
-
-## Gozlemler ve Yetersiz Baglam
-
-Include only useful observations or information gaps. Use an empty `observations` array when there is nothing useful to report. Never repeat a finding or its evidence as an observation.
-
-## Son Oneri
-
-Give a concise decision-support recommendation. Do not make the final decision on behalf of the user.
+Choose the report classification before writing. The JSON schema provided by the runtime is mandatory: use its exact field names and do not create synonyms such as `short_justification`. Return only the final report; do not include drafts, notes, self-corrections, alternative answers, or explanations of how the report should be rewritten. If the report contains any finding, never write the no-finding sentence anywhere in the response.
 
 # Dynamic Audit Context
 

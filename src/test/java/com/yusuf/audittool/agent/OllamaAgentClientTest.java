@@ -33,7 +33,17 @@ class OllamaAgentClientTest {
                           "prompt": "Review this issue",
                           "stream": false,
                           "think": false,
-                          "format": "json",
+                          "format": {
+                            "type": "object",
+                            "properties": {
+                              "summary": { "type": "string" },
+                              "findings": { "type": "array" },
+                              "observations": { "type": "array" },
+                              "recommendation": { "type": "string" }
+                            },
+                            "required": ["summary", "findings", "observations", "recommendation"],
+                            "additionalProperties": false
+                          },
                           "options": {
                             "num_ctx": 8192,
                             "num_predict": 1200

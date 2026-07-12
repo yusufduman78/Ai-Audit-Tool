@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Audit Tool</title>
+  <style>
+    :root { color-scheme: light; font-family: Arial, sans-serif; color: #18202a; background: #f5f7f9; }
+    body { margin: 0; } main { max-width: 1400px; margin: auto; padding: 24px; }
+    h1 { margin: 0 0 20px; font-size: 24px; } .layout { display:grid; grid-template-columns: minmax(0,1fr) minmax(360px, .9fr); gap:20px; }
+    section { background:#fff; border:1px solid #d9e0e6; border-radius:8px; padding:16px; } h2 { font-size:16px; margin:0 0 12px; }
+    label { display:block; font-size:13px; font-weight:700; margin:14px 0 6px; } textarea { box-sizing:border-box; width:100%; min-height:145px; resize:vertical; border:1px solid #b8c4cf; border-radius:5px; padding:10px; font:12px ui-monospace, monospace; }
+    button { margin-top:16px; border:0; border-radius:5px; background:#1769aa; color:#fff; padding:10px 16px; font-weight:700; cursor:pointer; } button:disabled { background:#91a4b5; }
+    .status { font-size:13px; color:#52606d; min-height:20px; } .finding, .observation, .recommendation { border-left:4px solid #b45309; padding:10px 12px; background:#fff8ed; margin:10px 0; } .finding.high { border-color:#b42318; background:#fff1f0; }
+    .observation { border-color:#1769aa; background:#f0f7fc; } .recommendation { border-color:#27824a; background:#f1faf4; } h3 { font-size:14px; margin:20px 0 8px; } .meta { color:#52606d; font-size:12px; } .empty { color:#52606d; } .warning { border-left:4px solid #c76a00; background:#fff8ed; padding:12px; } pre { overflow:auto; white-space:pre-wrap; font:12px ui-monospace, monospace; } @media(max-width:900px){.layout{grid-template-columns:1fr}}
+  </style>
+</head>
+<body><main>
+  <h1>AI Audit Tool</h1>
+  <div class="layout"><section><h2>Analiz Girdisi</h2>
+    <label for="payloadFile">Issue JSON</label><input id="payloadFile" type="file" accept="application/json,.json">
+    <label for="metadataFile">Metadata JSON (opsiyonel)</label><input id="metadataFile" type="file" accept="application/json,.json">
+    <label for="checklistFile">Checklist JSON (opsiyonel)</label><input id="checklistFile" type="file" accept="application/json,.json">
+    <button id="analyze">Analiz Et</button><p class="status" id="status"></p>
+  </section><section><h2>Denetim Raporu</h2><div id="report" class="empty">Henüz analiz yapılmadı.</div></section></div>
+</main><script>
+const byId = id => document.getElementById(id);
+async function readJson(id, required=false) { const file=byId(id).files[0]; if (!file) { if(required) throw new Error('Issue JSON dosyası seçilmelidir.'); return undefined; } return JSON.parse(await file.text()); }
+function addText(parent, tag, value, className) { const element=document.createElement(tag); if(className) element.className=className; element.textContent=value; parent.append(element); return element; }
+function addHeading(parent, value) { addText(parent, 'h3', value); }
+function renderFinding(root, finding) { const card=document.createElement('article'); card.className='finding '+finding.severity.toLowerCase(); addText(card, 'strong', finding.title); addText(card, 'div', `${finding.category} · ${finding.severity}`, 'meta'); addText(card, 'p', finding.rationale); addText(card, 'div', finding.evidence.join(' · '), 'meta'); const action=document.createElement('p'); addText(action, 'strong', 'Aksiyon: '); action.append(document.createTextNode(finding.recommendedAction)); card.append(action); root.append(card); }
+function renderObservation(root, observation) { const card=document.createElement('article'); card.className='observation'; addText(card, 'strong', observation.type); addText(card, 'p', observation.description); if(observation.evidence.length) addText(card, 'div', observation.evidence.join(' · '), 'meta'); root.append(card); }
+function render(report) { const root=byId('report'); root.replaceChildren(); addText(root, 'p', report.summary);
+  addHeading(root, 'Bulgular'); if (!report.findings.length) addText(root, 'p', 'Desteklenen denetim bulgusu yok.', 'empty'); else report.findings.forEach(finding => renderFinding(root, finding));
+  if (report.observations.length) { addHeading(root, 'Gozlemler ve Yetersiz Baglam'); report.observations.forEach(observation => renderObservation(root, observation)); }
+  addHeading(root, 'Son Oneri'); addText(root, 'div', report.recommendation, 'recommendation'); }
+function renderValidationFailure(data) { const root=byId('report'); root.replaceChildren(); const warning=document.createElement('div'); warning.className='warning'; addText(warning, 'strong', 'Rapor yapısı doğrulanamadı.'); addText(warning, 'p', data.reportValidationErrors.join(' ')); const details=document.createElement('details'); addText(details, 'summary', 'Ham model çıktısını incele'); const output=document.createElement('pre'); output.textContent=data.agentOutput; details.append(output); warning.append(details); root.append(warning); }
+byId('analyze').onclick=async()=>{ const status=byId('status'), button=byId('analyze'); try { button.disabled=true; status.textContent='Analiz çalışıyor...'; const issue=await readJson('payloadFile',true), metadata=await readJson('metadataFile'), checklist=await readJson('checklistFile'); const body={payload:issue.payload||issue,metadata:metadata||issue.metadata,checklist:checklist||issue.checklist}; const response=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); const data=await response.json(); if(!response.ok) throw new Error(data.details||data.error); if(!data.structuredOutput) { renderValidationFailure(data); status.textContent='Model çıktısı incelenmek üzere doğrulama dışında bırakıldı.'; return; } render(data.report); status.textContent='Analiz tamamlandı.'; } catch(error) { status.textContent=error.message; } finally { button.disabled=false; } };
+</script></body></html>
