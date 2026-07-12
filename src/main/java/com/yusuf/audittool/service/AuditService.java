@@ -16,15 +16,18 @@ public class AuditService {
     private final NormalizeService normalizeService;
     private final PromptBuilder promptBuilder;
     private final AgentClient agentClient;
+    private final AuditReportParser reportParser;
 
     public AuditService(
             NormalizeService normalizeService,
             PromptBuilder promptBuilder,
-            AgentClient agentClient
+            AgentClient agentClient,
+            AuditReportParser reportParser
     ) {
         this.normalizeService = normalizeService;
         this.promptBuilder = promptBuilder;
         this.agentClient = agentClient;
+        this.reportParser = reportParser;
     }
 
     public NormalizeResponse normalize(AnalyzeRequest request) {
@@ -36,6 +39,11 @@ public class AuditService {
         String prompt = promptBuilder.build(context);
         String agentOutput = agentClient.analyze(prompt);
 
-        return new AnalyzeResponse(agentOutput);
+        AnalyzeResponse response = new AnalyzeResponse(agentOutput);
+        reportParser.parse(agentOutput).ifPresent(report -> {
+            response.setReport(report);
+            response.setStructuredOutput(true);
+        });
+        return response;
     }
 }

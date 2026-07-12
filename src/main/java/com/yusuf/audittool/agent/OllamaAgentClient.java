@@ -43,6 +43,7 @@ public class OllamaAgentClient implements AgentClient {
                             prompt,
                             false,
                             false,
+                            "json",
                             Map.of(
                                     "num_ctx", properties.getContextWindow(),
                                     "num_predict", properties.getMaxOutputTokens()
@@ -66,6 +67,7 @@ public class OllamaAgentClient implements AgentClient {
             String prompt,
             boolean stream,
             boolean think,
+            String format,
             Map<String, Integer> options
     ) {
     }

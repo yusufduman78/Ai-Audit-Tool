@@ -45,7 +45,7 @@ class PromptBuilderTest {
         assertTrue(template.contains("apply this sequence"));
         assertTrue(template.contains("already evaluated"));
         assertTrue(template.contains("self-corrections"));
-        assertTrue(template.contains("professional Turkish"));
+        assertTrue(template.contains("valid JSON object"));
         assertTrue(template.contains("BEGIN_AUDIT_CONTEXT"));
         assertTrue(template.contains("END_AUDIT_CONTEXT"));
     }

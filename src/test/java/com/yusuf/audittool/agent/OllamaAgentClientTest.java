@@ -33,6 +33,7 @@ class OllamaAgentClientTest {
                           "prompt": "Review this issue",
                           "stream": false,
                           "think": false,
+                          "format": "json",
                           "options": {
                             "num_ctx": 8192,
                             "num_predict": 1200

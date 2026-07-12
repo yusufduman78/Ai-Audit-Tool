@@ -94,7 +94,16 @@ Weak evidence must not receive elevated severity.
 
 # Output Requirements
 
-Write the report in clear, professional Turkish using concise Markdown and short sentences. Preserve field names and values as they appear in the context. Do not repeat the same issue in multiple sections.
+Return only a valid JSON object. Do not use Markdown, code fences, explanatory text, or fields outside this contract:
+
+{
+  "summary": "Turkish summary",
+  "findings": [{"title": "", "category": "", "severity": "High|Medium|Low", "evidence": [""], "rationale": "", "recommendedAction": ""}],
+  "observations": [{"type": "Observation|Insufficient Context", "description": "", "evidence": [""]}],
+  "recommendation": "Turkish recommendation"
+}
+
+Use empty arrays when there are no findings or observations. Preserve field names and values as they appear in the context. Do not repeat the same issue in multiple sections.
 
 Choose the report classification before writing. Return only the final report: do not include drafts, notes, self-corrections, alternative answers, or explanations of how the report should be rewritten. If the report contains any finding, never write the no-finding sentence anywhere in the response.
 
@@ -115,11 +124,11 @@ For each supported finding, include:
 - `Kisa gerekce`: a brief, auditable explanation
 - `Onerilen aksiyon`: a specific next step tied to the finding
 
-Only when no finding is supported, write: `Saglanan baglamdan desteklenen bir denetim bulgusu belirlenemedi.` Use this sentence only in the `Bulgular` section and never repeat it elsewhere.
+When no finding is supported, return an empty `findings` array. Do not create a placeholder finding.
 
 ## Gozlemler ve Yetersiz Baglam
 
-Include only useful observations or information gaps. Clearly label each item as `Observation` or `Insufficient Context`. Omit this section when there is nothing useful to report. Never place the no-finding sentence in this section. Never repeat a finding or its evidence as an observation.
+Include only useful observations or information gaps. Use an empty `observations` array when there is nothing useful to report. Never repeat a finding or its evidence as an observation.
 
 ## Son Oneri
 
