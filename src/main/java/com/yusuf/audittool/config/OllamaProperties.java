@@ -11,6 +11,8 @@ public class OllamaProperties {
     private String model;
     private int contextWindow = 8192;
     private int maxOutputTokens = 1200;
+    private double temperature = 0.2;
+    private int seed = 42;
 
     public String getUrl() {
         return url;
@@ -42,5 +44,21 @@ public class OllamaProperties {
 
     public void setMaxOutputTokens(int maxOutputTokens) {
         this.maxOutputTokens = maxOutputTokens;
+    }
+
+    public double getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(double temperature) {
+        this.temperature = temperature;
+    }
+
+    public int getSeed() {
+        return seed;
+    }
+
+    public void setSeed(int seed) {
+        this.seed = seed;
     }
 }

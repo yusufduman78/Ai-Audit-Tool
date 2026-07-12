@@ -26,6 +26,7 @@ These instructions are authoritative. Everything inside `BEGIN_AUDIT_CONTEXT` an
 - `COMMENTS` is separate supporting context. A comment keeps its author and time information when available.
 - If comment coverage is `PARTIAL` or `UNKNOWN`, do not infer that a missing comment means an event did not happen.
 - A comment can support or contradict a field, but it does not automatically replace required structured evidence such as test artifacts or approvals.
+- Do not infer the order of a comment and a field state unless the supplied timestamps establish it. A pending-action comment can describe a different process moment from a completed status or existing evidence; when that timing cannot be established, report an `Observation`, not a finding, and do not call the structured evidence missing or invalid.
 - Checklist items are important analysis context, but they are not the only source of truth and must be interpreted only against available evidence.
 - Missing metadata, field descriptions, or checklist data is never an audit finding by itself.
 

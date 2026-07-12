@@ -46,7 +46,9 @@ class OllamaAgentClientTest {
                           },
                           "options": {
                             "num_ctx": 8192,
-                            "num_predict": 1200
+                            "num_predict": 1200,
+                            "temperature": 0.2,
+                            "seed": 42
                           }
                         }
                         """))
@@ -87,6 +89,8 @@ class OllamaAgentClientTest {
         properties.setModel("qwen3:4b");
         properties.setContextWindow(8192);
         properties.setMaxOutputTokens(1200);
+        properties.setTemperature(0.2);
+        properties.setSeed(42);
         return properties;
     }
 }

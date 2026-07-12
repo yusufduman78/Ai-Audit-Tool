@@ -53,9 +53,11 @@ public class OllamaAgentClient implements AgentClient {
                             false,
                             false,
                             AUDIT_REPORT_SCHEMA,
-                            Map.of(
+                            Map.<String, Number>of(
                                     "num_ctx", properties.getContextWindow(),
-                                    "num_predict", properties.getMaxOutputTokens()
+                                    "num_predict", properties.getMaxOutputTokens(),
+                                    "temperature", properties.getTemperature(),
+                                    "seed", properties.getSeed()
                             )
                     ))
                     .retrieve()
@@ -77,7 +79,7 @@ public class OllamaAgentClient implements AgentClient {
             boolean stream,
             boolean think,
             Object format,
-            Map<String, Integer> options
+            Map<String, Number> options
     ) {
     }
 
