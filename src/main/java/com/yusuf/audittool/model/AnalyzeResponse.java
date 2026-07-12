@@ -1,10 +1,13 @@
 package com.yusuf.audittool.model;
 
+import java.util.List;
+
 public class AnalyzeResponse {
 
     private String agentOutput;
     private AuditReport report;
     private boolean structuredOutput;
+    private List<String> reportValidationErrors;
 
     public AnalyzeResponse() {
     }
@@ -25,4 +28,6 @@ public class AnalyzeResponse {
     public void setReport(AuditReport report) { this.report = report; }
     public boolean isStructuredOutput() { return structuredOutput; }
     public void setStructuredOutput(boolean structuredOutput) { this.structuredOutput = structuredOutput; }
+    public List<String> getReportValidationErrors() { return reportValidationErrors; }
+    public void setReportValidationErrors(List<String> reportValidationErrors) { this.reportValidationErrors = reportValidationErrors; }
 }

@@ -1,5 +1,7 @@
 package com.yusuf.audittool.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import com.yusuf.audittool.agent.AgentClient;
@@ -17,17 +19,20 @@ public class AuditService {
     private final PromptBuilder promptBuilder;
     private final AgentClient agentClient;
     private final AuditReportParser reportParser;
+    private final AuditReportValidator reportValidator;
 
     public AuditService(
             NormalizeService normalizeService,
             PromptBuilder promptBuilder,
             AgentClient agentClient,
-            AuditReportParser reportParser
+            AuditReportParser reportParser,
+            AuditReportValidator reportValidator
     ) {
         this.normalizeService = normalizeService;
         this.promptBuilder = promptBuilder;
         this.agentClient = agentClient;
         this.reportParser = reportParser;
+        this.reportValidator = reportValidator;
     }
 
     public NormalizeResponse normalize(AnalyzeRequest request) {
@@ -40,10 +45,14 @@ public class AuditService {
         String agentOutput = agentClient.analyze(prompt);
 
         AnalyzeResponse response = new AnalyzeResponse(agentOutput);
-        reportParser.parse(agentOutput).ifPresent(report -> {
-            response.setReport(report);
-            response.setStructuredOutput(true);
-        });
+        reportParser.parse(agentOutput).ifPresentOrElse(report -> {
+            var errors = reportValidator.validate(report);
+            response.setReportValidationErrors(errors);
+            if (errors.isEmpty()) {
+                response.setReport(report);
+                response.setStructuredOutput(true);
+            }
+        }, () -> response.setReportValidationErrors(List.of("Agent output is not valid JSON.")));
         return response;
     }
 }
