@@ -1,0 +1,7 @@
+{
+  "scenarioId": "AUD-006",
+  "requiredResult": "INSUFFICIENT_CONTEXT_OWNER_APPROVAL",
+  "forbiddenFindings": [
+    "MISSING_OWNER_APPROVAL"
+  ]
+}

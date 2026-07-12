@@ -1,0 +1,16 @@
+{
+  "payload": {
+    "key": "AUD-006-UNKNOWN-OWNER-APPROVAL",
+    "fields": {
+      "summary": "Approved record",
+      "status": {
+        "name": "Approved"
+      },
+      "customfield_99999": ""
+    }
+  },
+  "metadata": {},
+  "checklist": [
+    "Approved records must include owner approval."
+  ]
+}

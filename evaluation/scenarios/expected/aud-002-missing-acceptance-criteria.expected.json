@@ -1,0 +1,11 @@
+{
+  "scenarioId": "AUD-002",
+  "requiredFindings": [
+    {
+      "code": "MISSING_ACCEPTANCE_CRITERIA",
+      "severity": [
+        "Medium"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "scenarioId": "AUD-008",
+  "requiredFindings": [
+    {
+      "code": "METADATA_ALLOWED_VALUE_CONFLICT",
+      "severity": [
+        "Medium"
+      ]
+    }
+  ]
+}

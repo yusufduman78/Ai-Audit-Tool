@@ -1,0 +1,11 @@
+{
+  "scenarioId": "AUD-014",
+  "requiredFindings": [
+    {
+      "code": "SAFETY_CHANGE_WITHOUT_VERIFICATION_IMPACT",
+      "severity": [
+        "High"
+      ]
+    }
+  ]
+}

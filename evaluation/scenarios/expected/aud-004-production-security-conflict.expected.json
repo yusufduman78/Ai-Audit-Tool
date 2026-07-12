@@ -1,0 +1,11 @@
+{
+  "scenarioId": "AUD-004",
+  "requiredFindings": [
+    {
+      "code": "CHECKLIST_DIRECT_CONFLICT",
+      "severity": [
+        "High"
+      ]
+    }
+  ]
+}

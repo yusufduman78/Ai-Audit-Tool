@@ -1,0 +1,7 @@
+{
+  "scenarioId": "AUD-009",
+  "requiredResult": "NO_SUPPORTED_FINDING",
+  "forbiddenFindings": [
+    "DONE_WITHOUT_EVIDENCE"
+  ]
+}

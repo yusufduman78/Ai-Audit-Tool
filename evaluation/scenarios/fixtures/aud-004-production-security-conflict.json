@@ -1,0 +1,27 @@
+{
+  "payload": {
+    "key": "AUD-004-PRODUCTION-SECURITY-CONFLICT",
+    "fields": {
+      "summary": "Production deployment",
+      "targetEnvironment": {
+        "name": "Production"
+      },
+      "securityApproval": {
+        "name": "Not Approved"
+      }
+    }
+  },
+  "metadata": {
+    "targetEnvironment": {
+      "fieldId": "targetEnvironment",
+      "name": "Target Environment"
+    },
+    "securityApproval": {
+      "fieldId": "securityApproval",
+      "name": "Security Approval"
+    }
+  },
+  "checklist": [
+    "Production targets require approved security approval."
+  ]
+}

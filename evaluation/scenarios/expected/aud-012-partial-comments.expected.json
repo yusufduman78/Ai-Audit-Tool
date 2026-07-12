@@ -1,0 +1,6 @@
+{
+  "scenarioId": "AUD-012",
+  "forbiddenFindings": [
+    "MISSING_COMMENT_EVIDENCE"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "payload": {
+    "key": "AUD-005-OPTIONAL-CONTEXT-ABSENT",
+    "fields": {
+      "summary": "Draft requirement",
+      "status": {
+        "name": "In Progress"
+      }
+    }
+  },
+  "metadata": {},
+  "checklist": []
+}

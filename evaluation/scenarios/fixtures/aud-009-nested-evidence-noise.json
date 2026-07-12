@@ -1,0 +1,28 @@
+{
+  "payload": {
+    "key": "AUD-009-NESTED-EVIDENCE-NOISE",
+    "fields": {
+      "summary": "Nested evidence",
+      "status": {
+        "name": "Done"
+      },
+      "testEvidence": [
+        {
+          "result": "Passed",
+          "self": "https://hidden"
+        }
+      ],
+      "avatarUrl": "https://hidden",
+      "customfield_40000": null
+    }
+  },
+  "metadata": {
+    "testEvidence": {
+      "fieldId": "testEvidence",
+      "name": "Test Evidence"
+    }
+  },
+  "checklist": [
+    "Done records must include test evidence."
+  ]
+}

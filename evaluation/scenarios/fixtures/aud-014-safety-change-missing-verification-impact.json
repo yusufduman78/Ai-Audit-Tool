@@ -1,0 +1,24 @@
+{
+  "payload": {
+    "key": "AUD-014-SAFETY-CHANGE-MISSING-VERIFICATION-IMPACT",
+    "fields": {
+      "summary": "Safety change",
+      "status": {
+        "name": "Approved"
+      },
+      "customfield_20109": {
+        "value": "Safety Concern"
+      },
+      "customfield_20106": ""
+    }
+  },
+  "metadata": {
+    "customfield_20106": {
+      "fieldId": "customfield_20106",
+      "name": "Verification Impact"
+    }
+  },
+  "checklist": [
+    "Safety-related changes must define verification impact."
+  ]
+}

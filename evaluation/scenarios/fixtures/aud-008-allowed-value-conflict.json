@@ -1,0 +1,27 @@
+{
+  "payload": {
+    "key": "AUD-008-ALLOWED-VALUE-CONFLICT",
+    "fields": {
+      "summary": "Risk review",
+      "riskLevel": "Critical"
+    }
+  },
+  "metadata": {
+    "riskLevel": {
+      "fieldId": "riskLevel",
+      "name": "Risk Level",
+      "allowedValues": [
+        {
+          "value": "Low"
+        },
+        {
+          "value": "Medium"
+        },
+        {
+          "value": "High"
+        }
+      ]
+    }
+  },
+  "checklist": []
+}

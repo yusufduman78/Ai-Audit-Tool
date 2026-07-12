@@ -1,0 +1,22 @@
+{
+  "payload": {
+    "key": "AUD-002-MISSING-ACCEPTANCE-CRITERIA",
+    "fields": {
+      "summary": "Session timeout requirement",
+      "status": {
+        "name": "Ready for Review"
+      },
+      "customfield_21014": ""
+    }
+  },
+  "metadata": {
+    "customfield_21014": {
+      "fieldId": "customfield_21014",
+      "name": "Acceptance Criteria",
+      "description": "Measurable acceptance criteria."
+    }
+  },
+  "checklist": [
+    "Requirements ready for review must include measurable acceptance criteria."
+  ]
+}

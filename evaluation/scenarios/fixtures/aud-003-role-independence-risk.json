@@ -1,0 +1,16 @@
+{
+  "payload": {
+    "key": "AUD-003-ROLE-INDEPENDENCE-RISK",
+    "fields": {
+      "summary": "Interface requirement",
+      "assignee": {
+        "displayName": "Engineer A"
+      },
+      "reviewer": {
+        "displayName": "Engineer A"
+      }
+    }
+  },
+  "metadata": {},
+  "checklist": []
+}

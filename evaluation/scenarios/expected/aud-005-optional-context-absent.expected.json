@@ -1,0 +1,8 @@
+{
+  "scenarioId": "AUD-005",
+  "requiredResult": "NO_SUPPORTED_FINDING",
+  "forbiddenFindings": [
+    "MISSING_METADATA",
+    "MISSING_CHECKLIST"
+  ]
+}

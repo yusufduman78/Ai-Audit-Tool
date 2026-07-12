@@ -1,0 +1,21 @@
+{
+  "payload": {
+    "key": "AUD-012-PARTIAL-COMMENTS",
+    "fields": {
+      "summary": "Partial history",
+      "status": {
+        "name": "Done"
+      },
+      "comment": {
+        "total": 4,
+        "comments": [
+          {
+            "body": "Review completed."
+          }
+        ]
+      }
+    }
+  },
+  "metadata": {},
+  "checklist": []
+}

@@ -1,0 +1,14 @@
+{
+  "scenarioId": "AUD-003",
+  "requiredObservations": [
+    {
+      "code": "ROLE_INDEPENDENCE_RISK",
+      "severity": [
+        "Medium"
+      ]
+    }
+  ],
+  "forbiddenFindings": [
+    "ROLE_CONFLICT"
+  ]
+}
