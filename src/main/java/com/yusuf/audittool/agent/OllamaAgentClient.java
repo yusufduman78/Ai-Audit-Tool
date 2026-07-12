@@ -51,13 +51,15 @@ public class OllamaAgentClient implements AgentClient {
                             properties.getModel(),
                             prompt,
                             false,
-                            false,
-                            AUDIT_REPORT_SCHEMA,
+                            properties.isThinkingEnabled(),
+                            properties.isThinkingEnabled() ? null : AUDIT_REPORT_SCHEMA,
                             Map.<String, Number>of(
                                     "num_ctx", properties.getContextWindow(),
                                     "num_predict", properties.getMaxOutputTokens(),
                                     "temperature", properties.getTemperature(),
-                                    "seed", properties.getSeed()
+                                    "seed", properties.getSeed(),
+                                    "top_p", properties.getTopP(),
+                                    "top_k", properties.getTopK()
                             )
                     ))
                     .retrieve()

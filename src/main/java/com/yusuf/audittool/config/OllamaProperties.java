@@ -13,6 +13,9 @@ public class OllamaProperties {
     private int maxOutputTokens = 1200;
     private double temperature = 0.2;
     private int seed = 42;
+    private boolean thinkingEnabled;
+    private double topP = 0.8;
+    private int topK = 20;
 
     public String getUrl() {
         return url;
@@ -60,5 +63,29 @@ public class OllamaProperties {
 
     public void setSeed(int seed) {
         this.seed = seed;
+    }
+
+    public boolean isThinkingEnabled() {
+        return thinkingEnabled;
+    }
+
+    public void setThinkingEnabled(boolean thinkingEnabled) {
+        this.thinkingEnabled = thinkingEnabled;
+    }
+
+    public double getTopP() {
+        return topP;
+    }
+
+    public void setTopP(double topP) {
+        this.topP = topP;
+    }
+
+    public int getTopK() {
+        return topK;
+    }
+
+    public void setTopK(int topK) {
+        this.topK = topK;
     }
 }

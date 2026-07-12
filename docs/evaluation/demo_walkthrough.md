@@ -14,13 +14,17 @@ Bu akis, web arayuzunde projenin temel davranislarini gostermek icin secilmis ki
 
 | Sira | Fixture | Gosterilen davranis | Beklenen sonuc |
 | --- | --- | --- | --- |
-| 1 | `evaluation/scenarios/fixtures/aud-001-done-without-evidence.json` | Tamamlanmis kayitta dogrulama kaniti eksikligi | High finding |
-| 2 | `evaluation/scenarios/fixtures/aud-004-production-security-conflict.json` | Checklist ve field degerleri arasinda dogrudan celiski | High finding |
-| 3 | `evaluation/scenarios/fixtures/aud-011-comment-status-tension.json` | Comment baglaminin kayit durumu ile gerilimi | Medium observation |
-| 4 | `evaluation/scenarios/fixtures/aud-013-approved-change-missing-impact-analysis.json` | Onaylanmis requirement change kaydinda impact analysis eksikligi | Finding |
+| 1 | `evaluation/scenarios/fixtures/aud-002-missing-acceptance-criteria.json` | Incelemeye hazir kayitta kabul kriteri eksikligi | Medium finding |
+| 2 | `evaluation/scenarios/fixtures/aud-003-role-independence-risk.json` | Desteklenen ancak kanitlanmamis rol bagimsizligi riski | Observation |
+| 3 | `evaluation/scenarios/fixtures/aud-004-production-security-conflict.json` | Checklist ve field degerleri arasinda dogrudan celiski | High finding |
+| 4 | `evaluation/scenarios/fixtures/aud-013-approved-change-missing-impact-analysis.json` | Onaylanmis requirement change kaydinda impact analysis eksikligi | High finding |
 | 5 | `evaluation/scenarios/fixtures/aud-010-context-injection.json` | Payload icindeki talimatin komut olarak uygulanmamasi | No supported finding |
 
 Beklenti detaylari ayni adli `evaluation/scenarios/expected/` dosyalarinda bulunur.
+
+Bu liste `qwen3:4b-instruct`, `temperature=0.2` ve `seed=42` ile 12 Temmuz 2026 tarihinde manuel olarak dogrulanan senaryolardan olusur. Model veya prompt degistiginde demo oncesi tekrar kontrol edilmelidir.
+
+`AUD-001`, `AUD-007` ve `AUD-011` bilinen model sinirlamalarini gostermek icin evaluation setinde tutulur, ancak varsayilan demo akimina dahil edilmez. Ayrintilar `current_results.md` dosyasindadir.
 
 ## Opsiyonel Yogun Payload Gosterimi
 

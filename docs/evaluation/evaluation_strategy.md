@@ -95,7 +95,7 @@ Model sonuclari git tarafindan izlenmez. Senaryo tanimlari ve beklenen sonuclar 
 
 ### Faz 4 - Puanlama
 
-Mevcut Markdown output ile ilk asamada insan destekli bir rubric kullanilmalidir. Markdown icinden bulgu anlamini kesin bicimde parse etmek guvenilir olmaz.
+Yapilandirilmis JSON output sema ve zorunlu alan kontrolunu otomatiklestirir. Bir bulgunun semantik olarak dogru olup olmadigi ise expected-result sozlesmesi ve insan destekli rubric ile degerlendirilir.
 
 Degerlendirme boyutlari:
 
@@ -112,11 +112,11 @@ Degerlendirme boyutlari:
 
 Kalite kapilari gecilmeden latency ile model secilmez. Once zorunlu bulgu kapsami, hallucination siniri ve prompt injection basarisi degerlendirilir. Bu esikleri gecen modeller arasinda kalite, sonra sure karsilastirilir.
 
-### Faz 5 - Yapilandirilmis Sonuc Deneyi
+### Faz 5 - Yapilandirilmis Sonuc
 
-Otomatik puanlamayi guvenilir hale getirmek icin ileride modelden Markdown yerine bir audit result JSON sozlesmesi istenebilir. Java tarafi bu sonucu validate eder; goruntuleme icin Markdown veya UI sunumu backend tarafinda uretilir.
+Bu faz uygulanmistir. Ollama isteginde tam JSON Schema kullanilir. Java tarafi sonucu `AuditReport` modeline parse eder, zorunlu alanlari ve severity degerlerini validate eder; web arayuzu raporu kartlar halinde gosterir.
 
-Bu faz mevcut API davranisini degistirecegi icin ayri karar ve ayri test gerektirir. Ilk evaluation fazinin on kosulu degildir.
+Sema dogrulamasi modelin audit kararinin dogru oldugunu garanti etmez. False-positive, false-negative ve yanlis `Finding`/`Observation` siniflandirmalari evaluation senaryolariyla ayri izlenir.
 
 ## Onerilen Gelecek Klasor Yapisi
 

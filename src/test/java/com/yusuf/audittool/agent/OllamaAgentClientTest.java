@@ -48,7 +48,9 @@ class OllamaAgentClientTest {
                             "num_ctx": 8192,
                             "num_predict": 1200,
                             "temperature": 0.2,
-                            "seed": 42
+                            "seed": 42,
+                            "top_p": 0.8,
+                            "top_k": 20
                           }
                         }
                         """))
@@ -67,6 +69,30 @@ class OllamaAgentClientTest {
         OllamaAgentClient client = new OllamaAgentClient(properties());
 
         assertThrows(IllegalArgumentException.class, () -> client.analyze("  "));
+    }
+
+    @Test
+    void usesPromptContractInsteadOfRuntimeSchemaInThinkingMode() {
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        OllamaProperties properties = properties();
+        properties.setThinkingEnabled(true);
+        OllamaAgentClient client = new OllamaAgentClient(
+                builder.baseUrl("http://localhost:11434").build(), properties);
+
+        server.expect(requestTo("http://localhost:11434/api/generate"))
+                .andExpect(content().json("""
+                        {
+                          "think": true,
+                          "format": null
+                        }
+                        """))
+                .andRespond(withSuccess("""
+                        { "thinking": "hidden reasoning", "response": "{\\\"summary\\\":\\\"Done\\\"}" }
+                        """, MediaType.APPLICATION_JSON));
+
+        assertEquals("{\"summary\":\"Done\"}", client.analyze("Review this issue"));
+        server.verify();
     }
 
     @Test
@@ -91,6 +117,9 @@ class OllamaAgentClientTest {
         properties.setMaxOutputTokens(1200);
         properties.setTemperature(0.2);
         properties.setSeed(42);
+        properties.setThinkingEnabled(false);
+        properties.setTopP(0.8);
+        properties.setTopK(20);
         return properties;
     }
 }

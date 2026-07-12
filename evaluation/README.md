@@ -7,7 +7,9 @@ Bu klasor, LLM davranisini degerlendirmek icin kullanilan request fixture'larini
 - `scenarios/expected/`: Modelin gormedigi, beklenen audit davranisini tanimlayan sozlesmeler.
 - `scenarios/generated/`: Python generator eklendiginde olusacak varyasyonlar icin ayrilmistir.
 
-Fixture requestleri production uygulamasinin runtime bagimliligi degildir. Ilk iki fixture elle yazilmistir; bunlar sonraki generator ve benchmark calismasi icin referans davranis saglar.
+Fixture requestleri production uygulamasinin runtime bagimliligi degildir. Fixture ve expected dosyalari, model davranisini ayni audit sozlesmesine gore karsilastirmak icin referans saglar.
+
+Guncel manuel model sonuclari `docs/evaluation/current_results.md`, web arayuzu demo sirasi ise `docs/evaluation/demo_walkthrough.md` icindedir.
 
 Manuel normalize testi:
 
