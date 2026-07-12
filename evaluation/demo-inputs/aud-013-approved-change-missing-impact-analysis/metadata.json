@@ -1,0 +1,68 @@
+{
+  "customfield_20101": {
+    "fieldId": "customfield_20101",
+    "name": "Change Request Type",
+    "schema": {
+      "type": "option"
+    }
+  },
+  "customfield_20102": {
+    "fieldId": "customfield_20102",
+    "name": "Change Rationale",
+    "schema": {
+      "type": "string"
+    },
+    "description": "Reason and justification for the requested change."
+  },
+  "customfield_20103": {
+    "fieldId": "customfield_20103",
+    "name": "Baseline",
+    "schema": {
+      "type": "string"
+    }
+  },
+  "customfield_20105": {
+    "fieldId": "customfield_20105",
+    "name": "Impact Analysis",
+    "schema": {
+      "type": "string"
+    },
+    "description": "Assessment of technical, schedule, cost and safety impact."
+  },
+  "customfield_20106": {
+    "fieldId": "customfield_20106",
+    "name": "Verification Impact",
+    "schema": {
+      "type": "string"
+    }
+  },
+  "customfield_20107": {
+    "fieldId": "customfield_20107",
+    "name": "Change Approval",
+    "schema": {
+      "type": "option"
+    }
+  },
+  "customfield_20109": {
+    "fieldId": "customfield_20109",
+    "name": "Cause of Change",
+    "schema": {
+      "type": "option"
+    },
+    "description": "Categorized reason that initiated the change request.",
+    "allowedValues": [
+      {
+        "id": "31001",
+        "value": "Safety Concern"
+      },
+      {
+        "id": "31002",
+        "value": "Test Failure"
+      },
+      {
+        "id": "31003",
+        "value": "Customer Request"
+      }
+    ]
+  }
+}

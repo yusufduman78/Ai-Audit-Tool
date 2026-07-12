@@ -8,6 +8,7 @@ public class AnalyzeRequest {
     private JsonNode metadata;
     private JsonNode fieldDescriptions;
     private JsonNode checklist;
+    private AgentOptions agentOptions;
 
     public JsonNode getPayload() {
         return payload;
@@ -40,5 +41,12 @@ public class AnalyzeRequest {
     public void setChecklist(JsonNode checklist) {
         this.checklist = checklist;
     }
-}
 
+    public AgentOptions getAgentOptions() {
+        return agentOptions;
+    }
+
+    public void setAgentOptions(AgentOptions agentOptions) {
+        this.agentOptions = agentOptions;
+    }
+}

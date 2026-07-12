@@ -1,0 +1,12 @@
+{
+  "key": "AUD-004-PRODUCTION-SECURITY-CONFLICT",
+  "fields": {
+    "summary": "Production deployment",
+    "targetEnvironment": {
+      "name": "Production"
+    },
+    "securityApproval": {
+      "name": "Not Approved"
+    }
+  }
+}

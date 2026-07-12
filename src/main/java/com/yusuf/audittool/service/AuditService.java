@@ -42,7 +42,9 @@ public class AuditService {
     public AnalyzeResponse analyze(AnalyzeRequest request) {
         AgentContext context = normalizeService.normalize(request);
         String prompt = promptBuilder.build(context);
-        String agentOutput = agentClient.analyze(prompt);
+        String agentOutput = request.getAgentOptions() == null
+                ? agentClient.analyze(prompt)
+                : agentClient.analyze(prompt, request.getAgentOptions());
 
         AnalyzeResponse response = new AnalyzeResponse(agentOutput);
         reportParser.parse(agentOutput).ifPresentOrElse(report -> {

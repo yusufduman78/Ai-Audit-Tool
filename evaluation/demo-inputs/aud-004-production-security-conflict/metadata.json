@@ -1,0 +1,10 @@
+{
+  "targetEnvironment": {
+    "fieldId": "targetEnvironment",
+    "name": "Target Environment"
+  },
+  "securityApproval": {
+    "fieldId": "securityApproval",
+    "name": "Security Approval"
+  }
+}

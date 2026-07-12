@@ -1,0 +1,41 @@
+{
+  "key": "CHG-BASE-001",
+  "fields": {
+    "summary": "Update authentication timeout requirement",
+    "status": {
+      "name": "Approved"
+    },
+    "issuetype": {
+      "name": "Requirement Change"
+    },
+    "customfield_20101": {
+      "value": "Requirement Change"
+    },
+    "customfield_20102": "Update the timeout to address an identified safety concern.",
+    "customfield_20103": "Baseline 3.2",
+    "customfield_20105": "",
+    "customfield_20106": "Regression verification will include authentication timeout scenarios.",
+    "customfield_20107": {
+      "value": "Approved"
+    },
+    "customfield_20109": {
+      "value": "Safety Concern"
+    },
+    "customfield_29990": null,
+    "comment": {
+      "startAt": 0,
+      "maxResults": 50,
+      "total": 1,
+      "comments": [
+        {
+          "id": "20001",
+          "body": "The change was approved by the review board. The impact analysis document is still pending.",
+          "author": {
+            "displayName": "Configuration Manager"
+          },
+          "created": "2026-07-10T16:00:00.000+0000"
+        }
+      ]
+    }
+  }
+}

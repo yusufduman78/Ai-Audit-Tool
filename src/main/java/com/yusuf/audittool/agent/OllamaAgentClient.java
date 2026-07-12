@@ -10,6 +10,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import com.yusuf.audittool.config.OllamaProperties;
+import com.yusuf.audittool.model.AgentOptions;
 
 @Component
 public class OllamaAgentClient implements AgentClient {
@@ -39,20 +40,28 @@ public class OllamaAgentClient implements AgentClient {
 
     @Override
     public String analyze(String prompt) {
+        return analyze(prompt, null);
+    }
+
+    @Override
+    public String analyze(String prompt, AgentOptions options) {
         if (prompt == null || prompt.isBlank()) {
             throw new IllegalArgumentException("Prompt must not be blank.");
         }
+
+        String model = selectedModel(options);
+        boolean thinkingEnabled = selectedThinking(options);
 
         try {
             OllamaGenerateResponse response = restClient.post()
                     .uri("/api/generate")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new OllamaGenerateRequest(
-                            properties.getModel(),
+                            model,
                             prompt,
                             false,
-                            properties.isThinkingEnabled(),
-                            properties.isThinkingEnabled() ? null : AUDIT_REPORT_SCHEMA,
+                            thinkingEnabled,
+                            thinkingEnabled ? null : AUDIT_REPORT_SCHEMA,
                             Map.<String, Number>of(
                                     "num_ctx", properties.getContextWindow(),
                                     "num_predict", properties.getMaxOutputTokens(),
@@ -73,6 +82,20 @@ public class OllamaAgentClient implements AgentClient {
         } catch (RestClientException exception) {
             throw new AgentRuntimeException("Agent runtime is not available.", exception);
         }
+    }
+
+    private String selectedModel(AgentOptions options) {
+        if (options == null || options.getModel() == null || options.getModel().isBlank()) {
+            return properties.getModel();
+        }
+        return options.getModel().strip();
+    }
+
+    private boolean selectedThinking(AgentOptions options) {
+        if (options == null || options.getThinkingEnabled() == null) {
+            return properties.isThinkingEnabled();
+        }
+        return options.getThinkingEnabled();
     }
 
     private record OllamaGenerateRequest(

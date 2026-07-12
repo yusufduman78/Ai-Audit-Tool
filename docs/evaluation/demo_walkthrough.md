@@ -1,23 +1,26 @@
 # Demo Akisi
 
-Bu akis, web arayuzunde projenin temel davranislarini gostermek icin secilmis kisa bir senaryo setidir. Tum fixture dosyalari tam `AnalyzeRequest` paketi oldugu icin sadece `Issue JSON` alanindan yuklenir. Ayrica metadata veya checklist dosyasi secilmez.
+Bu akis, web arayuzunde projenin temel davranislarini gostermek icin secilmis kisa bir senaryo setidir. Temel demo icin `evaluation/demo-inputs/` altindaki ayri issue, metadata ve checklist dosyalari kullanilir. Eski tam fixture dosyalari da desteklenmeye devam eder.
 
 ## Calistirma
 
 1. Ollama'nin calistigini dogrula.
 2. Proje kok dizininde `mvn spring-boot:run` komutunu calistir.
 3. Tarayicidan `http://localhost:8080` adresini ac.
-4. Asagidaki fixture dosyasini `Issue JSON` alanindan sec ve `Analiz Et` dugmesine bas.
-5. Sonucu ilgili `expected` dosyasiyla semantik olarak karsilastir. LLM'in baslik cümleleri bire bir ayni olmak zorunda degildir; kanit ve siniflandirma onemlidir.
+4. Model listesinden `qwen3:4b-instruct (onerilen)` secimini koru ve thinking modunu kapali birak.
+5. `evaluation/demo-inputs/aud-002-missing-acceptance-criteria/` altindaki uc JSON dosyasini karsilik gelen alanlara yukle.
+6. `Analiz Et` dugmesine bas ve sonucu ilgili `expected` dosyasiyla semantik olarak karsilastir. LLM'in baslik cumleleri bire bir ayni olmak zorunda degildir; kanit ve siniflandirma onemlidir.
+
+Model seciminin calistigini gostermek icin ayni girdiyi `phi4-mini-reasoning:latest` ile tekrar calistirmak opsiyoneldir. Cikti Ingilizce olabilir ve siniflandirma varsayilan modelden farkli olabilir; bu davranis model karsilastirmasinin bir parcasidir.
 
 ## Onerilen Senaryo Sirasi
 
 | Sira | Fixture | Gosterilen davranis | Beklenen sonuc |
 | --- | --- | --- | --- |
-| 1 | `evaluation/scenarios/fixtures/aud-002-missing-acceptance-criteria.json` | Incelemeye hazir kayitta kabul kriteri eksikligi | Medium finding |
+| 1 | `evaluation/demo-inputs/aud-002-missing-acceptance-criteria/` | Ayri issue, metadata ve checklist dosyalariyla kabul kriteri eksikligi | Medium finding |
 | 2 | `evaluation/scenarios/fixtures/aud-003-role-independence-risk.json` | Desteklenen ancak kanitlanmamis rol bagimsizligi riski | Observation |
-| 3 | `evaluation/scenarios/fixtures/aud-004-production-security-conflict.json` | Checklist ve field degerleri arasinda dogrudan celiski | High finding |
-| 4 | `evaluation/scenarios/fixtures/aud-013-approved-change-missing-impact-analysis.json` | Onaylanmis requirement change kaydinda impact analysis eksikligi | High finding |
+| 3 | `evaluation/demo-inputs/aud-004-production-security-conflict/` | Checklist ve field degerleri arasinda dogrudan celiski | High finding |
+| 4 | `evaluation/demo-inputs/aud-013-approved-change-missing-impact-analysis/` | Onaylanmis requirement change kaydinda impact analysis eksikligi | High finding |
 | 5 | `evaluation/scenarios/fixtures/aud-010-context-injection.json` | Payload icindeki talimatin komut olarak uygulanmamasi | No supported finding |
 
 Beklenti detaylari ayni adli `evaluation/scenarios/expected/` dosyalarinda bulunur.

@@ -1,10 +1,13 @@
 package com.yusuf.audittool.controller;
 
+import java.util.List;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -19,6 +22,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.yusuf.audittool.agent.AgentClient;
 import com.yusuf.audittool.agent.AgentRuntimeException;
+import com.yusuf.audittool.agent.OllamaModelCatalog;
+import com.yusuf.audittool.model.AgentOptions;
+import com.yusuf.audittool.model.AvailableModel;
+import com.yusuf.audittool.model.ModelCatalogResponse;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -30,11 +37,37 @@ class AnalyzeControllerTest {
     @MockitoBean
     private AgentClient agentClient;
 
+    @MockitoBean
+    private OllamaModelCatalog modelCatalog;
+
     @Test
     void healthReturnsOk() throws Exception {
         mockMvc.perform(get("/api/health"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("OK"));
+    }
+
+    @Test
+    void modelsReturnsInstalledOllamaModels() throws Exception {
+        when(modelCatalog.getModels()).thenReturn(new ModelCatalogResponse(
+                "qwen3:4b-instruct",
+                false,
+                List.of(new AvailableModel(
+                        "qwen3:4b-instruct",
+                        2497293803L,
+                        "4.0B",
+                        "Q4_K_M",
+                        List.of("completion"),
+                        false,
+                        true
+                ))
+        ));
+
+        mockMvc.perform(get("/api/models"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.defaultModel").value("qwen3:4b-instruct"))
+                .andExpect(jsonPath("$.models[0].name").value("qwen3:4b-instruct"))
+                .andExpect(jsonPath("$.models[0].supportsThinking").value(false));
     }
 
     @Test
@@ -165,6 +198,27 @@ class AnalyzeControllerTest {
         verify(agentClient).analyze(contains("COMMENTS"));
         verify(agentClient).analyze(contains("Test execution is pending approval."));
         verify(agentClient).analyze(contains("Reviewer A"));
+    }
+
+    @Test
+    void analyzePassesRequestSpecificAgentOptions() throws Exception {
+        when(agentClient.analyze(anyString(), any(AgentOptions.class))).thenReturn("Audit report");
+
+        mockMvc.perform(post("/api/analyze")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "payload": { "key": "REQ-101" },
+                                  "agentOptions": {
+                                    "model": "phi4-mini-reasoning:latest",
+                                    "thinkingEnabled": false
+                                  }
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.agentOutput").value("Audit report"));
+
+        verify(agentClient).analyze(anyString(), any(AgentOptions.class));
     }
 
     @Test

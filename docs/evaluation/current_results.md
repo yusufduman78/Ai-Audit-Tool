@@ -54,6 +54,19 @@ Qwen3.5 4B, false-positive finding konusunda daha temkinlidir; ancak acik checkl
 
 Uygulama thinking modunu konfigurasyondan destekler ve reasoning metnini kullaniciya gostermez. `qwen3.5:4b` thinking deneyi `16384` context ve `8000` output butcesiyle tek `AUD-001` kaydinda 420 saniye icinde final response uretemedi. Bu profil mevcut donanim ve prompt uzunluguyla pratik demo secenegi kabul edilmedi.
 
+### Phi-4 Mini Reasoning Non-Thinking
+
+`phi4-mini-reasoning:latest`, arayuzden secilebilmesi icin kurulu model listesinde tutuldu. Karsilastirma `think=false`, `8192` context ve zorunlu rapor semasiyla yapildi.
+
+| Senaryo | Sonuc | Kisa degerlendirme |
+| --- | --- | --- |
+| `AUD-002` | Kaldi | Bos acceptance criteria acik checklist ihlali olmasina ragmen observation olarak siniflandirildi. |
+| `AUD-004` | Kaldi | Medium finding uretti ancak `category` alani bos oldugu icin yapisal dogrulamadan gecmedi. |
+| `AUD-011` | Gecti | Comment ve status gerilimini kesin ihlal yerine observation olarak tuttu. |
+| `AUD-013` | Kismi basari | Eksik impact analysis finding olarak yakalandi ancak High yerine Medium verildi ve benzer bir observation eklendi. |
+
+Phi profili bazi temkinli siniflandirmalarda basarilidir; yine de direct finding recall'i ve sema uyumu varsayilan Qwen3 instruct profilinden dusuktur. Ciktinin Ingilizce olabilmesi kabul edilir. Ayrica ceviri modeli cagrisi bu asamada kullanilmaz.
+
 ## Bilinen Sinirlamalar
 
 - JSON Schema yalnizca cikti yapisini garanti eder; audit kararinin dogrulugunu garanti etmez.
@@ -61,6 +74,7 @@ Uygulama thinking modunu konfigurasyondan destekler ve reasoning metnini kullani
 - Comment ile status arasindaki zaman gerilimini gereksiz yere kesin finding yapabilir.
 - Promptu tek bir senaryoya gore uzatmak baska senaryolarda gerileme yaratabilir.
 - Thinking modu daha kucuk parametreli modelde bile cok uzun surebilir; model boyutu tek basina latency gostergesi degildir.
+- Secilebilir her kurulu model ayni kaliteyi saglamaz; model secimi kullaniciya kontrol verir ancak varsayilan model evaluation sonucuna gore belirlenir.
 - Sonuclar sentetik fixture'lara dayanir; gercek kurum verisiyle ayri anonimlestirilmis dogrulama gerekir.
 
 Bu sinirlamalar arayuzde kullaniciya gosterilen raporun karar destegi olarak ele alinmasi gerektigini destekler. Sistem nihai denetim kararini otomatik vermemelidir.

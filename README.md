@@ -11,6 +11,7 @@ Ilk kullanim alani Jira issue verileridir. Normalize katmani belirli bir issue t
 - Checklist maddelerini ve Jira comment gecmisini ayri baglam olarak tasir.
 - Local LLM icin denetlenebilir bir prompt olusturur.
 - Ollama JSON Schema destegiyle yapilandirilmis audit raporu ister.
+- Kurulu Ollama modellerini arayuzden secmeye ve desteklenen modellerde thinking modunu analiz bazinda acmaya izin verir.
 - Bulgulari, gozlemleri ve son oneriyi web arayuzunde gosterir.
 - Model raporunu parse edip zorunlu alanlar ve severity degerleri bakimindan dogrular.
 
@@ -43,7 +44,9 @@ Ardindan web arayuzunu ac:
 http://localhost:8080
 ```
 
-Arayuzde ham Jira JSON'u veya `evaluation/scenarios/fixtures/` altindaki tam `AnalyzeRequest` fixture dosyalarindan biri `Issue JSON` alanina yuklenebilir. Tam fixture dosyasi metadata ve checklist bilgisini kendi icinde tasidigi icin diger iki dosya alani bos birakilir.
+Arayuzde issue, metadata ve checklist JSON dosyalari ayri ayri yuklenebilir. Hazir uc dosyali ornekler `evaluation/demo-inputs/` altindadir. `evaluation/scenarios/fixtures/` altindaki tam `AnalyzeRequest` fixture dosyalari da yalnizca `Issue JSON` alanina yuklenebilir; arayuz bunlarin icindeki metadata ve checklist bilgisini otomatik kullanir.
+
+Model listesi Ollama'dan canli olarak alinir. Secim sadece o analiz istegi icin gecerlidir ve `application.properties` dosyasindaki varsayilani degistirmez. Thinking yetenegi Ollama tarafindan bildirilmeyen modellerde arayuz bu secenegi kapali tutar.
 
 Uygulamayi durdurmak icin uygulamanin calistigi terminalde `Control+C` kullanilir.
 
@@ -53,6 +56,12 @@ Saglik kontrolu:
 
 ```bash
 curl http://localhost:8080/api/health
+```
+
+Kurulu Ollama modellerini ve varsayilan profili gormek:
+
+```bash
+curl http://localhost:8080/api/models
 ```
 
 Normalize edilen baglami gormek:
@@ -77,11 +86,15 @@ Temel request sozlesmesi:
 {
   "payload": { "key": "REQ-001", "fields": {} },
   "metadata": {},
-  "checklist": []
+  "checklist": [],
+  "agentOptions": {
+    "model": "qwen3:4b-instruct",
+    "thinkingEnabled": false
+  }
 }
 ```
 
-`payload` zorunludur. `metadata` ve `checklist` opsiyoneldir.
+`payload` zorunludur. `metadata`, `checklist` ve `agentOptions` opsiyoneldir. `agentOptions` verilmezse uygulama konfigurasyonundaki varsayilan model ve thinking ayari kullanilir.
 
 ## Konfigurasyon
 
@@ -109,6 +122,12 @@ mvn spring-boot:run
 ```
 
 Sabit `seed` ve dusuk `temperature`, ayni model ve prompt ile tekrar calistirmalarda sonucu daha tutarli hale getirir. Bu ayarlar semantik dogrulugu garanti etmez.
+
+### Model ve Thinking Secimi
+
+Web arayuzu `/api/models` uzerinden makinede kurulu modelleri listeler. `qwen3:4b-instruct` mevcut evaluation setinde finding kapsami daha iyi oldugu icin varsayilandir. `phi4-mini-reasoning:latest` secilebilir durumda tutulur; Ingilizce veya Turkce cikti uretebilir ancak testlerde bazi acik ihlalleri observation olarak siniflandirmistir.
+
+Bu asamada raporu Turkceye cevirmek icin ikinci bir model cagrisi yapilmaz. Ikinci cagri gecikmeyi ve anlamsal kayip riskini artirir. Modelin urettigi dil oldugu gibi gosterilir.
 
 ### Qwen3.5 Thinking Modu
 
@@ -142,6 +161,7 @@ src/main/resources/prompts/   Sistem promptu
 src/main/resources/static/    Web arayuzu
 src/test/java/                 Java testleri
 evaluation/scenarios/         Fixture ve expected-result sozlesmeleri
+evaluation/demo-inputs/       Ayri issue, metadata ve checklist demo dosyalari
 docs/architecture/            Mimari kararlar ve UML notlari
 docs/evaluation/              Demo ve model degerlendirme belgeleri
 ```

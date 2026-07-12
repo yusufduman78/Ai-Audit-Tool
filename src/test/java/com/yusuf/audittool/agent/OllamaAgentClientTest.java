@@ -14,6 +14,7 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
 import com.yusuf.audittool.config.OllamaProperties;
+import com.yusuf.audittool.model.AgentOptions;
 
 class OllamaAgentClientTest {
 
@@ -92,6 +93,31 @@ class OllamaAgentClientTest {
                         """, MediaType.APPLICATION_JSON));
 
         assertEquals("{\"summary\":\"Done\"}", client.analyze("Review this issue"));
+        server.verify();
+    }
+
+    @Test
+    void usesModelSelectedForTheCurrentRequest() {
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        OllamaAgentClient client = new OllamaAgentClient(
+                builder.baseUrl("http://localhost:11434").build(), properties());
+        AgentOptions options = new AgentOptions();
+        options.setModel("phi4-mini-reasoning:latest");
+        options.setThinkingEnabled(false);
+
+        server.expect(requestTo("http://localhost:11434/api/generate"))
+                .andExpect(content().json("""
+                        {
+                          "model": "phi4-mini-reasoning:latest",
+                          "think": false
+                        }
+                        """))
+                .andRespond(withSuccess("""
+                        { "response": "Selected model response" }
+                        """, MediaType.APPLICATION_JSON));
+
+        assertEquals("Selected model response", client.analyze("Review this issue", options));
         server.verify();
     }
 
