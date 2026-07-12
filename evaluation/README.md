@@ -22,4 +22,4 @@ curl -X POST http://localhost:8080/api/normalize \
 
 Manuel analiz testi icin ayni istekte endpointi `/api/analyze` olarak degistir.
 
-Web arayuzu testi icin `demo-inputs/` altindaki bir senaryo klasorunden uc dosyayi ilgili alanlara yukle. Arayuz bu dosyalari tek `AnalyzeRequest` icinde birlestirir; backend'e uc ayri HTTP istegi gonderilmez.
+Web arayuzu testi icin `demo-inputs/` altindaki bir senaryo klasorunden issue, metadata, field descriptions ve checklist dosyalarini ilgili alanlara yukle. Arayuz bu dosyalari tek `AnalyzeRequest` icinde birlestirir; backend'e ayri HTTP istekleri gonderilmez.

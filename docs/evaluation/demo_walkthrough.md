@@ -8,7 +8,7 @@ Bu akis, web arayuzunde projenin temel davranislarini gostermek icin secilmis ki
 2. Proje kok dizininde `mvn spring-boot:run` komutunu calistir.
 3. Tarayicidan `http://localhost:8080` adresini ac.
 4. Model listesinden `qwen3:4b-instruct (onerilen)` secimini koru ve thinking modunu kapali birak.
-5. `evaluation/demo-inputs/aud-002-missing-acceptance-criteria/` altindaki uc JSON dosyasini karsilik gelen alanlara yukle.
+5. `evaluation/demo-inputs/aud-002-missing-acceptance-criteria/` altindaki dort JSON dosyasini karsilik gelen alanlara yukle.
 6. `Analiz Et` dugmesine bas ve sonucu ilgili `expected` dosyasiyla semantik olarak karsilastir. LLM'in baslik cumleleri bire bir ayni olmak zorunda degildir; kanit ve siniflandirma onemlidir.
 
 Model seciminin calistigini gostermek icin ayni girdiyi `phi4-mini-reasoning:latest` ile tekrar calistirmak opsiyoneldir. Cikti Ingilizce olabilir ve siniflandirma varsayilan modelden farkli olabilir; bu davranis model karsilastirmasinin bir parcasidir.

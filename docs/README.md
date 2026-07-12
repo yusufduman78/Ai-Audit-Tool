@@ -1,12 +1,12 @@
-# Project Docs
+# Proje Dokümantasyonu
 
-Bu klasor proje dokumanlari ve mimari cizimler icin ayrilmistir.
+Bu klasör mimari belgeleri, değerlendirme çalışmaları ve diyagram kaynakları için ayrılmıştır.
 
-- `diagrams/`: UML ve benzeri diyagram kaynaklari.
-- `architecture/`: Yerel mimari plan ve calisma notlari.
-- `evaluation/`: LLM degerlendirme stratejisi ve senaryo tasarim notlari.
+- [Güncel sistem mimarisi](architecture/guncel_sistem_mimarisi.md): Katmanlar, uçtan uca iş akışı, field descriptions kullanımı, çıktı stratejisi ve güncel UML diyagramları.
+- [Mimari belgeler](architecture/README.md): Mimari klasörünün içerik özeti.
+- `diagrams/`: UML ve benzeri bağımsız diyagram kaynakları.
+- `evaluation/`: LLM değerlendirme stratejisi, demo akışı ve senaryo tasarım notları.
 
-Web arayuzunde secilmis fixture'lari calistirmak icin [demo akisi](evaluation/demo_walkthrough.md) kullanilabilir.
-Son model karsilastirmalari ve bilinen sinirlamalar [guncel sonuc belgesinde](evaluation/current_results.md) tutulur.
+Web arayüzünde seçilmiş fixture'ları çalıştırmak için [demo akışı](evaluation/demo_walkthrough.md) kullanılabilir. Son model karşılaştırmaları ve bilinen sınırlamalar [güncel sonuç belgesinde](evaluation/current_results.md) tutulur.
 
-`docs/architecture/generic_ai_audit_tool_mimari_plan.md` dosyasi calisma notu oldugu icin commit disinda tutulur.
+`docs/architecture/generic_ai_audit_tool_mimari_plan.md` ilk çalışma planıdır ve commit dışında tutulur. Mevcut kodun davranışı için güncel sistem mimarisi belgesi esas alınmalıdır.

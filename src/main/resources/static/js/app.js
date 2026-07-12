@@ -7,6 +7,7 @@ const state = {
 const elements = {
   payloadFile: document.getElementById('payloadFile'),
   metadataFile: document.getElementById('metadataFile'),
+  fieldDescriptionsFile: document.getElementById('fieldDescriptionsFile'),
   checklistFile: document.getElementById('checklistFile'),
   modelSelect: document.getElementById('modelSelect'),
   modelDetails: document.getElementById('modelDetails'),
@@ -23,6 +24,7 @@ const elements = {
 const fileInputs = [
   { input: elements.payloadFile, name: document.getElementById('payloadFileName') },
   { input: elements.metadataFile, name: document.getElementById('metadataFileName') },
+  { input: elements.fieldDescriptionsFile, name: document.getElementById('fieldDescriptionsFileName') },
   { input: elements.checklistFile, name: document.getElementById('checklistFileName') }
 ];
 
@@ -252,6 +254,7 @@ async function analyze() {
 
     const issue = await readJson(elements.payloadFile, true);
     const metadata = await readJson(elements.metadataFile);
+    const fieldDescriptions = await readJson(elements.fieldDescriptionsFile);
     const checklist = await readJson(elements.checklistFile);
     const modelName = elements.modelSelect.value;
 
@@ -260,7 +263,7 @@ async function analyze() {
     const body = {
       payload: issue.payload || issue,
       metadata: metadata ?? issue.metadata,
-      fieldDescriptions: issue.fieldDescriptions,
+      fieldDescriptions: fieldDescriptions ?? issue.fieldDescriptions,
       checklist: checklist ?? issue.checklist,
       agentOptions: {
         model: modelName,

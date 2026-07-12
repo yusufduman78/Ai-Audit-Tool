@@ -44,7 +44,7 @@ Ardindan web arayuzunu ac:
 http://localhost:8080
 ```
 
-Arayuzde issue, metadata ve checklist JSON dosyalari ayri ayri yuklenebilir. Hazir uc dosyali ornekler `evaluation/demo-inputs/` altindadir. `evaluation/scenarios/fixtures/` altindaki tam `AnalyzeRequest` fixture dosyalari da yalnizca `Issue JSON` alanina yuklenebilir; arayuz bunlarin icindeki metadata ve checklist bilgisini otomatik kullanir.
+Arayuzde issue, metadata, Turkce alan aciklamalari ve checklist JSON dosyalari ayri ayri yuklenebilir. Hazir dort dosyali ornekler `evaluation/demo-inputs/` altindadir. `evaluation/scenarios/fixtures/` altindaki tam `AnalyzeRequest` fixture dosyalari da yalnizca `Issue JSON` alanina yuklenebilir; arayuz bunlarin icindeki metadata, field descriptions ve checklist bilgisini otomatik kullanir.
 
 Model listesi Ollama'dan canli olarak alinir. Secim sadece o analiz istegi icin gecerlidir ve `application.properties` dosyasindaki varsayilani degistirmez. Thinking yetenegi Ollama tarafindan bildirilmeyen modellerde arayuz bu secenegi kapali tutar.
 

@@ -1,5 +1,8 @@
-# Architecture Notes
+# Mimari Belgeler
 
-Bu klasor mimari plan, karar notlari ve faz dokumanlari icin ayrilmistir.
+Bu klasör mimari planları, güncel sistem açıklamalarını ve tasarım kararlarını içerir.
 
-Yerel calisma plani olan `generic_ai_audit_tool_mimari_plan.md` commit disinda tutulur.
+- `guncel_sistem_mimarisi.md`: Mevcut kodun katmanlarını, uçtan uca iş akışını, field descriptions kullanımını, çıktı stratejisini ve güncel UML diyagramlarını açıklar.
+- `comment_context_design.md`: Yorum verisinin ayrı context olarak ele alınmasına ilişkin tasarım notudur.
+
+İlk çalışma planı olan `generic_ai_audit_tool_mimari_plan.md` yerel referans olarak tutulur ve commit dışında bırakılır. Kod değiştikçe güncel mimari kaynağı olarak `guncel_sistem_mimarisi.md` esas alınmalıdır.
