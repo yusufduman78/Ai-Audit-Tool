@@ -42,6 +42,9 @@ class PromptBuilderTest {
         assertTrue(template.contains("EMPTY_ARRAY"));
         assertTrue(template.contains("comment coverage"));
         assertTrue(template.contains("Insufficient Context"));
+        assertTrue(template.contains("apply this sequence"));
+        assertTrue(template.contains("already evaluated"));
+        assertTrue(template.contains("self-corrections"));
         assertTrue(template.contains("professional Turkish"));
         assertTrue(template.contains("BEGIN_AUDIT_CONTEXT"));
         assertTrue(template.contains("END_AUDIT_CONTEXT"));
