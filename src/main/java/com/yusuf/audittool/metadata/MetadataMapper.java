@@ -179,7 +179,14 @@ public class MetadataMapper {
             String label,
             Map<String, FieldMetadata> registry
     ) {
-        for (String candidate : candidates(key, parentPathPart(path), lastPathPart(path), label)) {
+        for (String candidate : candidates(
+                key,
+                withoutArrayIndexes(parentPathPart(path)),
+                withoutArrayIndexes(lastPathPart(path)),
+                parentPathPart(path),
+                lastPathPart(path),
+                label
+        )) {
             FieldMetadata fieldMetadata = registry.get(normalize(candidate));
             if (fieldMetadata != null) {
                 return fieldMetadata;
@@ -225,6 +232,14 @@ public class MetadataMapper {
 
         String parentPath = path.substring(0, dotIndex);
         return lastPathPart(parentPath);
+    }
+
+    private String withoutArrayIndexes(String pathPart) {
+        if (pathPart == null || pathPart.isBlank()) {
+            return pathPart;
+        }
+
+        return pathPart.replaceAll("\\[\\d+\\]", "");
     }
 
     private void updateStatistics(FieldMetadata fieldMetadata, ContextStatistics statistics) {

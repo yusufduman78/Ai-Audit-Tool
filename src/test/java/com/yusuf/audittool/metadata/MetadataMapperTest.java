@@ -278,6 +278,37 @@ class MetadataMapperTest {
         assertEquals("Authentication", field.getMetadata().getAllowedValues().get(0).getValue());
     }
 
+    @Test
+    void matchesArrayItemsWithTheirOwningFieldMetadata() throws Exception {
+        NormalizedField field = activeField("record.affectedModules[0]", "[0]", "record.affectedModules[0]");
+        ContextStatistics statistics = new ContextStatistics();
+
+        JsonNode metadata = jsonMapper.readTree("""
+                {
+                  "values": [
+                    {
+                      "fieldId": "affectedModules",
+                      "name": "Affected Modules",
+                      "schema": {
+                        "type": "array",
+                        "items": "option"
+                      }
+                    }
+                  ]
+                }
+                """);
+
+        mapper.enrich(List.of(field), List.of(), metadata, null, statistics);
+
+        assertTrue(field.getMetadata().isProvided());
+        assertEquals("affectedModules", field.getMetadata().getId());
+        assertEquals("Affected Modules", field.getMetadata().getName());
+        assertEquals("array", field.getMetadata().getSchemaType());
+        assertEquals("option", field.getMetadata().getSchemaItems());
+        assertEquals(1, statistics.getMetadataMatchedCount());
+        assertEquals(0, statistics.getMetadataMissingCount());
+    }
+
     private NormalizedField activeField(String path, String key, String label) {
         NormalizedField field = new NormalizedField();
         field.setPath(path);
