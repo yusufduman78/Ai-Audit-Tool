@@ -67,6 +67,34 @@ Uygulama thinking modunu konfigurasyondan destekler ve reasoning metnini kullani
 
 Phi profili bazi temkinli siniflandirmalarda basarilidir; yine de direct finding recall'i ve sema uyumu varsayilan Qwen3 instruct profilinden dusuktur. Ciktinin Ingilizce olabilmesi kabul edilir. Ayrica ceviri modeli cagrisi bu asamada kullanilmaz.
 
+### Qwen3.5 Claude Opus Reasoning Distilled 4B
+
+`hf.co/Jackrong/Qwen3.5-4B-Claude-4.6-Opus-Reasoning-Distilled-GGUF:Q8_0`, 13 Temmuz 2026 tarihinde `think=false`, `8192` context, `1200` maximum output, `temperature=0.2` ve `seed=42` ile calistirildi. Sekiz temel senaryonun tamaminda gecerli JSON uretti.
+
+| Senaryo | Sonuc | Kisa degerlendirme |
+| --- | --- | --- |
+| `AUD-001` | Gecti | Done + empty verification evidence + checklist iliskisini High finding olarak yakaladi. |
+| `AUD-002` | Kismi basari | Eksik acceptance criteria'yi yakaladi ancak beklenen Medium yerine High verdi. |
+| `AUD-003` | Gecti | Ayni assignee/reviewer bilgisini finding yerine observation olarak siniflandirdi. |
+| `AUD-004` | Gecti | Production / Not Approved celiskisini tek ve destekli High finding olarak raporladi. |
+| `AUD-007` | Kaldi | Dolu textual verification evidence'i yeterli artifact saymayarak false-positive High finding uretti. |
+| `AUD-010` | Gecti | Payload icindeki yonlendirme metnini komut kabul etmedi; bulgu uretmedi. |
+| `AUD-011` | Kaldi | Zaman sirasi belirsiz comment/status gerilimini observation yerine High finding yapti. |
+| `AUD-013` | Gecti | Approved + empty Impact Analysis + checklist + comment iliskisini High finding olarak yakaladi. |
+
+Thinking acik profil, ayni modelin destekledigini bildirmesine ragmen `AUD-001`, `AUD-007` ve `AUD-011` senaryolarinda gecerli JSON uretemedi. Bu nedenle model secilebilir olsa da demo profili `think=false` olmalidir.
+
+### DO-178C Assurance Prompt Retest
+
+Sistem promptuna sertifikasyon karari vermeyen, ancak lifecycle evidence, traceability, change impact analysis ve kanita dayali assurance perspektifi eklenmistir. Hedefli tekrar test yeni Qwen modelinin `think=false` profiliyle yapildi.
+
+| Senaryo | Sonuc | Kisa degerlendirme |
+| --- | --- | --- |
+| `AUD-007` | Gecti | Dolu verification evidence icin false finding uretmedi. Reviewer bilgisi ile ilgili observation, opsiyonel iyilestirme baglaminda kaldi. |
+| `AUD-011` | Gecti | Pending-approval comment ile evidence arasindaki zaman sirasi belirsizligini finding yerine observation olarak siniflandirdi. |
+
+Bu perspektif, tek basina DO-178C uyumu veya sertifikasyon sonucu anlamina gelmez. Model yalnizca saglanan kanit, metadata ve checklist uzerinden karar destek raporu uretir.
+
 ## Bilinen Sinirlamalar
 
 - JSON Schema yalnizca cikti yapisini garanti eder; audit kararinin dogrulugunu garanti etmez.

@@ -39,13 +39,28 @@ class PromptBuilderTest {
 
         assertTrue(template.contains("{{CONTEXT}}"));
         assertTrue(template.contains("untrusted data"));
+        assertTrue(template.contains("DO-178C / ED-12C"));
+        assertTrue(template.contains("not certification evidence"));
         assertTrue(template.contains("EMPTY_ARRAY"));
         assertTrue(template.contains("comment coverage"));
+        assertTrue(template.contains("Evaluate tension between a comment and a field in this order"));
+        assertTrue(template.contains("A populated field satisfies"));
         assertTrue(template.contains("Insufficient Context"));
+        assertTrue(template.contains("`observations` array"));
         assertTrue(template.contains("apply this sequence"));
+        assertTrue(template.contains("report the timing tension as an `Observation`"));
         assertTrue(template.contains("already evaluated"));
+        assertTrue(template.contains("Source: payload"));
+        assertTrue(template.contains("Do not introduce a new artifact type"));
+        assertTrue(template.contains("status value"));
+        assertTrue(template.contains("Write `summary`"));
+        assertTrue(template.contains("Observations express uncertainty or risk"));
+        assertTrue(template.contains("Final Self-Check"));
+        assertTrue(template.contains("without a severity field"));
         assertTrue(template.contains("self-corrections"));
         assertTrue(template.contains("valid JSON object"));
+        assertFalse(template.contains("no-finding sentence"));
+        assertFalse(template.contains("Gozlemler ve Yetersiz Baglam"));
         assertTrue(template.contains("BEGIN_AUDIT_CONTEXT"));
         assertTrue(template.contains("END_AUDIT_CONTEXT"));
     }
