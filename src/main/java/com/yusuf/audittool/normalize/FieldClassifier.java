@@ -2,6 +2,7 @@ package com.yusuf.audittool.normalize;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.springframework.stereotype.Component;
@@ -29,6 +30,14 @@ public class FieldClassifier {
             "key"
     );
 
+    private static final Set<String> COLLAPSED_OBJECT_DETAIL_KEYS = Set.of(
+            "id",
+            "self",
+            "iconurl",
+            "avatarid",
+            "avatarurls"
+    );
+
     public FieldClassification classify(List<RawField> rawFields) {
         return classify(rawFields, Set.of());
     }
@@ -37,6 +46,7 @@ public class FieldClassifier {
         FieldClassification classification = new FieldClassification();
         ContextStatistics statistics = classification.getStatistics();
         Set<String> consumedSimpleValuePaths = new HashSet<>();
+        Set<String> collapsedObjectDetailPaths = new HashSet<>();
         Set<String> skippedNoisePaths = new HashSet<>();
 
         for (RawField rawField : rawFields) {
@@ -45,6 +55,11 @@ public class FieldClassifier {
             }
 
             if (consumedSimpleValuePaths.contains(rawField.getPath())) {
+                continue;
+            }
+
+            if (isAtOrDescendantOf(rawField, collapsedObjectDetailPaths)) {
+                statistics.setSkippedNoiseFieldCount(statistics.getSkippedNoiseFieldCount() + 1);
                 continue;
             }
 
@@ -92,6 +107,7 @@ public class FieldClassifier {
                 if (simpleValue != null) {
                     addActiveField(classification, rawField, simpleValue.value().asString(), "object.simple");
                     consumedSimpleValuePaths.add(rawField.getPath() + "." + simpleValue.key());
+                    collectCollapsedObjectDetailPaths(rawField, value, collapsedObjectDetailPaths);
                 }
                 continue;
             }
@@ -124,6 +140,25 @@ public class FieldClassifier {
         return parentPaths.stream()
                 .anyMatch(path -> rawField.getPath().startsWith(path + ".")
                         || rawField.getPath().startsWith(path + "["));
+    }
+
+    private boolean isAtOrDescendantOf(RawField rawField, Set<String> paths) {
+        return paths.stream()
+                .anyMatch(path -> rawField.getPath().equals(path)
+                        || rawField.getPath().startsWith(path + ".")
+                        || rawField.getPath().startsWith(path + "["));
+    }
+
+    private void collectCollapsedObjectDetailPaths(
+            RawField rawField,
+            JsonNode value,
+            Set<String> detailPaths
+    ) {
+        for (String key : value.propertyNames()) {
+            if (COLLAPSED_OBJECT_DETAIL_KEYS.contains(key.toLowerCase(Locale.ROOT))) {
+                detailPaths.add(rawField.getPath() + "." + key);
+            }
+        }
     }
 
     private SimpleValue extractSimpleObjectValue(JsonNode value) {

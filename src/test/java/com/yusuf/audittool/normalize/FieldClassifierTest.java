@@ -59,14 +59,30 @@ class FieldClassifierTest {
 
         FieldClassification classification = classifier.classify(walker.walk(payload));
 
-        assertEquals(List.of("status", "status.id", "resolution", "resolution.description", "assignee"),
+        assertEquals(List.of("status", "resolution", "resolution.description", "assignee"),
                 activePaths(classification));
         assertEquals("Done", activeByPath(classification, "status").getValue());
-        assertEquals("10000", activeByPath(classification, "status.id").getValue());
         assertEquals("Resolved", activeByPath(classification, "resolution").getValue());
         assertEquals("Issue has been completed", activeByPath(classification, "resolution.description").getValue());
         assertEquals("Ali Yilmaz", activeByPath(classification, "assignee").getValue());
-        assertEquals(1, classification.getStatistics().getSkippedNoiseFieldCount());
+        assertEquals(2, classification.getStatistics().getSkippedNoiseFieldCount());
+    }
+
+    @Test
+    void keepsIdentifiersWhenObjectHasNoReadableSummaryValue() throws Exception {
+        JsonNode payload = jsonMapper.readTree("""
+                {
+                  "reference": {
+                    "id": "DOC-42",
+                    "revision": "C"
+                  }
+                }
+                """);
+
+        FieldClassification classification = classifier.classify(walker.walk(payload));
+
+        assertEquals(List.of("reference.id", "reference.revision"), activePaths(classification));
+        assertEquals("DOC-42", activeByPath(classification, "reference.id").getValue());
     }
 
     @Test
