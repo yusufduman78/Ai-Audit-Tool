@@ -17,6 +17,8 @@ import tools.jackson.databind.JsonNode;
 @Component
 public class FieldClassifier {
 
+    private final ChangeItemSummarizer changeItemSummarizer = new ChangeItemSummarizer();
+
     private static final Set<String> NOISE_KEYS = Set.of(
             "expand",
             "operations",
@@ -108,6 +110,16 @@ public class FieldClassifier {
                     addActiveField(classification, rawField, simpleValue.value().asString(), "object.simple");
                     consumedSimpleValuePaths.add(rawField.getPath() + "." + simpleValue.key());
                     collectCollapsedObjectDetailPaths(rawField, value, collapsedObjectDetailPaths);
+                } else {
+                    ChangeItemSummarizer.Summary summary = changeItemSummarizer.summarize(value);
+                    if (summary != null) {
+                        addActiveField(classification, rawField, summary.value(), "change.compact");
+                        for (String consumedKey : summary.consumedKeys()) {
+                            String consumedPath = rawField.getPath() + "." + consumedKey;
+                            consumedSimpleValuePaths.add(consumedPath);
+                            collapsedObjectDetailPaths.add(consumedPath);
+                        }
+                    }
                 }
                 continue;
             }

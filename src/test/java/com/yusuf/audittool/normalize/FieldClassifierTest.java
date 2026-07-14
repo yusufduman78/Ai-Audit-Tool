@@ -86,6 +86,29 @@ class FieldClassifierTest {
     }
 
     @Test
+    void compactsChangeDataWithoutIncludingLinksOrNestedTechnicalValues() throws Exception {
+        JsonNode payload = jsonMapper.readTree("""
+                {
+                  "change": {
+                    "field": "status",
+                    "fromString": "Open",
+                    "to": ["10001"],
+                    "toString": "Done",
+                    "self": "https://example.test/change/42"
+                  }
+                }
+                """);
+
+        FieldClassification classification = classifier.classify(walker.walk(payload));
+
+        assertEquals(List.of("change"), activePaths(classification));
+        assertEquals("field=status | fromString=Open | toString=Done",
+                activeByPath(classification, "change").getValue());
+        assertEquals("change.compact", activeByPath(classification, "change").getValueType());
+        assertEquals(2, classification.getStatistics().getSkippedNoiseFieldCount());
+    }
+
+    @Test
     void skipsStructuralNoiseAndUrlValues() throws Exception {
         JsonNode payload = jsonMapper.readTree("""
                 {
