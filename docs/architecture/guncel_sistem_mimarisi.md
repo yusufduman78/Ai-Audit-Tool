@@ -2,7 +2,7 @@
 
 > Not: Ana teslimat artık `AuditEngine` ve `AgentTransport` üzerinden kullanılan bir kütüphane akışıdır. Bu belgedeki Spring MVC, Ollama ve yapılandırılmış JSON rapor bölümleri yerel demoyu anlatır. Güncel paket sınırı için [Kütüphane ve Demo Ayrımı](library_demo_ayrimi.md) belgesini esas alın.
 
-Bu belge, uygulamanın mevcut kod yapısını ve çalışma akışını açıklar. İlk planlama belgesinden sonra eklenen yorum işleme, yapılandırılmış rapor, model seçimi, thinking desteği ve web arayüzü gibi parçalar burada güncel hâlleriyle ele alınmıştır.
+Bu belge, uygulamanın mevcut kod yapısını ve çalışma akışını açıklar. İlk planlama belgesinden sonra eklenen yorum işleme, yapılandırılmış rapor, model seçimi, thinking desteği ve web arayüzü gibi parçalar burada güncel hâlleriyle ele alınmıştır. Kod Maven reactor içindeki iki modüle ayrılmıştır: `core` kütüphane, `demo` ise yerel Ollama ve web uygulamasıdır.
 
 Belgenin amacı yalnızca sınıfları listelemek değildir. Bir isteğin sisteme girdiği andan kullanıcıya rapor olarak döndüğü ana kadar hangi verinin nereden geçtiğini, hangi sınıfın hangi sorumluluğu taşıdığını ve sistemin hangi noktalarda model davranışına bağımlı olduğunu göstermektir.
 
@@ -23,7 +23,17 @@ Ham iş kaydı
 
 Burada "deterministic" ifadesi önemlidir. JSON alanlarını bulma, null alanları eleme, field kimliklerini metadata ile eşleştirme ve yorumları ayırma işlemleri dil modeline bırakılmaz. Model yalnızca hazırlanmış bağlam üzerinde denetim değerlendirmesi yapar.
 
-## 2. Üst Seviye Mimari
+## 2. Maven Modülleri
+
+```text
+root pom.xml
+|- core/   audittool-core: normalize, metadata, checklist, prompt ve public API
+`- demo/   audittool-demo: Spring Boot, Ollama, web arayüzü ve structured rapor görünümü
+```
+
+`core` modülü `demo` modülünü bilmez. `demo`, `audittool-core` bağımlılığı üzerinden core akışını kullanır ve yalnızca yerel gösterim için gerekli Ollama/HTTP ayrıntılarını ekler. Bu ayrım sayesinde kurum uygulaması sadece `core/target/audittool-core-0.0.1-SNAPSHOT.jar` artifact'ini alıp kendi `AgentTransport` implementasyonunu sağlayabilir.
+
+## 3. Üst Seviye Mimari
 
 ```mermaid
 flowchart LR
@@ -44,21 +54,21 @@ flowchart LR
 
 Sistem tek bir Spring Boot uygulamasıdır. Ayrı mikroservisler bulunmaz. Ollama, uygulama dışında çalışan yerel model sunucusudur ve HTTP üzerinden çağrılır.
 
-## 3. Katmanlar ve Sorumluluklar
+## Katmanlar ve Sorumluluklar
 
-### 3.1 Kullanıcı arayüzü
+### Kullanıcı arayüzü
 
-`src/main/resources/static/` altında bulunan arayüz aşağıdaki işleri yapar:
+`demo/src/main/resources/static/demo/` altında bulunan arayüz aşağıdaki işleri yapar:
 
 - Issue JSON dosyasını alır.
 - Opsiyonel metadata ve checklist dosyalarını alır.
-- `/api/models` üzerinden kurulu Ollama modellerini listeler.
+- `/demo/api/models` üzerinden kurulu Ollama modellerini listeler.
 - Seçilen model ve thinking ayarını analiz isteğine ekler.
-- `/api/analyze` sonucunu rapor, uyarı veya ham çıktı olarak gösterir.
+- `/demo/api/analyze` sonucunu rapor, uyarı veya ham çıktı olarak gösterir.
 
 Arayüz doğrudan Ollama'ya bağlanmaz. Tüm model çağrıları backend üzerinden yapılır.
 
-### 3.2 Controller katmanı
+### Controller katmanı
 
 Controller sınıfları HTTP sözleşmesini yönetir:
 
@@ -68,9 +78,9 @@ Controller sınıfları HTTP sözleşmesini yönetir:
 
 Controller sınıfları JSON gezmez, prompt oluşturmaz ve denetim kararı vermez.
 
-### 3.3 Service katmanı
+### Service katmanı
 
-`AuditService`, ana kullanım senaryosunu koordine eder:
+Demo modülündeki `AuditService`, yerel web demosunun structured rapor akışını koordine eder:
 
 1. İsteği `NormalizeService` ile normalize eder.
 2. `PromptBuilder` ile model promptunu oluşturur.
@@ -79,7 +89,7 @@ Controller sınıfları JSON gezmez, prompt oluşturmaz ve denetim kararı verme
 5. Parse edilen raporu doğrular.
 6. Ham çıktı ile varsa doğrulanmış raporu birlikte döndürür.
 
-### 3.4 Normalizasyon katmanı
+### Normalizasyon katmanı
 
 Normalizasyon katmanı projenin modelden bağımsız çekirdeğidir:
 
@@ -92,7 +102,7 @@ Normalizasyon katmanı projenin modelden bağımsız çekirdeğidir:
 - `SourceInfoExtractor`: kayıt kimliği ve başlığı gibi kaynak bilgisini bulur.
 - `NormalizeService`: bu parçaları doğru sırayla çalıştırıp `AgentContext` üretir.
 
-### 3.5 Prompt katmanı
+### Prompt katmanı
 
 - `PromptTemplateLoader`, `core_auditor.md` dosyasını okur.
 - `AgentContextRenderer`, Java modelini okunabilir metne dönüştürür.
@@ -100,7 +110,7 @@ Normalizasyon katmanı projenin modelden bağımsız çekirdeğidir:
 
 Prompt içindeki sabit talimatlar ile kullanıcıdan gelen veri açık sınırlarla ayrılır. Issue, metadata, açıklama, checklist ve yorum metinleri güvenilmeyen denetim verisi kabul edilir.
 
-### 3.6 Agent katmanı
+### Agent katmanı
 
 - `AgentClient`, model sağlayıcısından bağımsız arayüzdür.
 - `OllamaAgentClient`, Ollama `/api/generate` endpointini çağırır.
@@ -109,7 +119,7 @@ Prompt içindeki sabit talimatlar ile kullanıcıdan gelen veri açık sınırla
 
 Model seçimi istek içinde verilirse yalnızca o analiz için kullanılır. Verilmezse `application.properties` içindeki varsayılan model kullanılır.
 
-### 3.7 Rapor katmanı
+### Rapor katmanı
 
 - `AuditReportParser`, model metnini `AuditReport` nesnesine çevirmeyi dener.
 - `AuditReportValidator`, zorunlu alanları, severity değerlerini, evidence listesini ve tekrar eden bulguları kontrol eder.
@@ -130,7 +140,7 @@ sequenceDiagram
     participant RP as Parser ve Validator
 
     Kullanici->>UI: Issue, metadata ve checklist seçer
-    UI->>AC: POST /api/analyze
+    UI->>AC: POST /demo/api/analyze
     AC->>AS: analyze(request)
     AS->>NS: normalize(request)
     NS-->>AS: AgentContext
@@ -258,7 +268,7 @@ flowchart LR
   Description: Gereksinimin ölçülebilir kabul kriterlerini içerir.
 ```
 
-Bu açıklama `AnalyzeResponse` içinde ayrı bir üst seviye alan olarak dönmez. Çünkü açıklama bir denetim sonucu değil, modelin alanı doğru yorumlaması için kullanılan bağlamdır. Açıklamanın sisteme girip girmediğini görmek için `/api/normalize` endpointi kullanılabilir; ilgili `NormalizedField` veya `EmptyField` içindeki `metadata.descriptionTr` alanında görünür.
+Bu açıklama `AnalyzeResponse` içinde ayrı bir üst seviye alan olarak dönmez. Çünkü açıklama bir denetim sonucu değil, modelin alanı doğru yorumlaması için kullanılan bağlamdır. Açıklamanın sisteme girip girmediğini görmek için `/demo/api/normalize` endpointi kullanılabilir; ilgili `NormalizedField` veya `EmptyField` içindeki `metadata.descriptionTr` alanında görünür.
 
 ### 6.1 Arayüzden yükleme
 
@@ -320,7 +330,7 @@ STATISTICS
 
 ## 10. Model Seçimi ve Thinking
 
-Arayüz `/api/models` çağrısıyla kurulu modelleri alır. Model katalog cevabı şunları içerir:
+Arayüz `/demo/api/models` çağrısıyla kurulu modelleri alır. Model katalog cevabı şunları içerir:
 
 - Model adı
 - Dosya boyutu
@@ -518,14 +528,14 @@ Bu diyagram, ilk plandaki sınıf yapısına göre şu önemli eklemeleri içeri
 - Parser ve validator
 - Structured ve ham çıktıyı birlikte taşıyan response
 
-## 14. Endpointler
+## 14. Demo Endpointleri
 
 | Endpoint | Amaç | Model çağrısı |
 | --- | --- | --- |
-| `GET /api/health` | Spring Boot servisinin çalıştığını gösterir | Hayır |
-| `GET /api/models` | Kurulu Ollama modellerini listeler | Üretim yapmaz |
-| `POST /api/normalize` | AgentContext üretir ve debug amacıyla döndürür | Hayır |
-| `POST /api/analyze` | Tam normalizasyon, prompt ve model akışını çalıştırır | Evet |
+| `GET /demo/api/health` | Spring Boot demosunun çalıştığını gösterir | Hayır |
+| `GET /demo/api/models` | Kurulu Ollama modellerini listeler | Üretim yapmaz |
+| `POST /demo/api/normalize` | AgentContext üretir ve debug amacıyla döndürür | Hayır |
+| `POST /demo/api/analyze` | Demo normalizasyonu, prompt ve Ollama akışını çalıştırır | Evet |
 
 ## 15. Hata Sınırları
 

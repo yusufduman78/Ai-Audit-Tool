@@ -5,11 +5,12 @@ Bu akis, web arayuzunde projenin temel davranislarini gostermek icin secilmis ki
 ## Calistirma
 
 1. Ollama'nin calistigini dogrula.
-2. Proje kok dizininde `mvn spring-boot:run` komutunu calistir.
-3. Tarayicidan `http://localhost:8080` adresini ac.
-4. Model listesinden `qwen3:4b-instruct (onerilen)` secimini koru ve thinking modunu kapali birak.
-5. `evaluation/demo-inputs/aud-002-missing-acceptance-criteria/` altindaki dort JSON dosyasini karsilik gelen alanlara yukle.
-6. `Analiz Et` dugmesine bas ve sonucu ilgili `expected` dosyasiyla semantik olarak karsilastir. LLM'in baslik cumleleri bire bir ayni olmak zorunda degildir; kanit ve siniflandirma onemlidir.
+2. Proje kok dizininde `mvn clean package -DskipTests` komutunu calistir.
+3. `java -jar demo/target/audittool-demo-0.0.1-SNAPSHOT.jar` komutuyla demoyu baslat.
+4. Tarayicidan `http://localhost:8080` adresini ac.
+5. Model listesinden `qwen3:4b-instruct (onerilen)` secimini koru ve thinking modunu kapali birak.
+6. `evaluation/demo-inputs/aud-002-missing-acceptance-criteria/` altindaki dort JSON dosyasini karsilik gelen alanlara yukle.
+7. `Analiz Et` dugmesine bas ve sonucu ilgili `expected` dosyasiyla semantik olarak karsilastir. LLM'in baslik cumleleri bire bir ayni olmak zorunda degildir; kanit ve siniflandirma onemlidir.
 
 Model seciminin calistigini gostermek icin ayni girdiyi `phi4-mini-reasoning:latest` ile tekrar calistirmak opsiyoneldir. Cikti Ingilizce olabilir ve siniflandirma varsayilan modelden farkli olabilir; bu davranis model karsilastirmasinin bir parcasidir.
 

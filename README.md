@@ -37,7 +37,8 @@ Ollama masaustu uygulamasi calisiyorsa API genellikle `http://localhost:11434` a
 Proje kok dizininde:
 
 ```bash
-mvn spring-boot:run
+mvn clean package -DskipTests
+java -jar demo/target/audittool-demo-0.0.1-SNAPSHOT.jar
 ```
 
 Ardindan demo web arayuzunu ac:
@@ -100,7 +101,7 @@ Temel request sozlesmesi:
 
 ## Konfigurasyon
 
-Yerel demo ayarlari `src/main/resources/demo/application-demo.properties` icindedir:
+Yerel demo ayarlari `demo/src/main/resources/demo/application-demo.properties` icindedir:
 
 ```properties
 server.port=8080
@@ -120,7 +121,8 @@ Ayarlar environment variable ile override edilebilir. Ornekler `.env.example` do
 ```bash
 export OLLAMA_MODEL=qwen3.5:9b
 export OLLAMA_THINKING_ENABLED=false
-mvn spring-boot:run
+mvn clean package -DskipTests
+java -jar demo/target/audittool-demo-0.0.1-SNAPSHOT.jar
 ```
 
 Sabit `seed` ve dusuk `temperature`, ayni model ve prompt ile tekrar calistirmalarda sonucu daha tutarli hale getirir. Bu ayarlar semantik dogrulugu garanti etmez.
@@ -140,7 +142,8 @@ export OLLAMA_MODEL=qwen3.5:4b
 export OLLAMA_THINKING_ENABLED=true
 export OLLAMA_CONTEXT_WINDOW=16384
 export OLLAMA_MAX_OUTPUT_TOKENS=8000
-mvn spring-boot:run
+mvn clean package -DskipTests
+java -jar demo/target/audittool-demo-0.0.1-SNAPSHOT.jar
 ```
 
 Ollama, Qwen3.5 thinking ile runtime JSON Schema birlikte kullanildiginda final JSON'u gizli thinking alanina yazabildigi icin uygulama thinking modunda runtime schema kisitini gondermez. Final response yine `AuditReportParser` ve `AuditReportValidator` tarafindan kontrol edilir; reasoning metni API cevabina veya arayuze tasinmaz.
@@ -158,11 +161,17 @@ Java testleri normalize, metadata, checklist, comment extraction, prompt olustur
 ## Proje Yapisi
 
 ```text
-src/main/java/.../api/         Kutuphane giris API'si
-src/main/java/.../demo/        Yerel Spring Boot ve Ollama demosu
-src/main/resources/prompts/   Sistem promptu
-src/main/resources/static/demo/ Web demo arayuzu
-src/test/java/                 Java testleri
+core/                           Kullanicinin bagimlilik olarak alacagi kutuphane
+  src/main/java/.../api/        Kutuphane giris API'si
+  src/main/java/.../normalize/  JSON normalizasyonu
+  src/main/java/.../prompt/     Prompt olusturma
+  src/main/resources/prompts/   Ortak sistem promptlari
+  src/test/java/                 Core testleri
+demo/                           Yerel Spring Boot ve Ollama demosu
+  src/main/java/.../demo/       Ollama, web ve rapor kartlari
+  src/main/resources/demo/      Demo ayarlari
+  src/main/resources/static/    Web demo arayuzu
+  src/test/java/                 Demo testleri
 evaluation/scenarios/         Fixture ve expected-result sozlesmeleri
 evaluation/demo-inputs/       Ayri issue, metadata ve checklist demo dosyalari
 docs/architecture/            Mimari kararlar ve UML notlari
