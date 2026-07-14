@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Audit Tool</title>
+  <link rel="stylesheet" href="/demo/css/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Local decision support</p>
+      <h1>AI Audit Tool</h1>
+    </div>
+    <div id="runtimeStatus" class="runtime-status" aria-live="polite">
+      <span class="status-dot"></span>
+      <span>Ollama kontrol ediliyor</span>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="input-panel" aria-labelledby="inputTitle">
+      <div class="panel-heading">
+        <div>
+          <p class="step-label">Girdi</p>
+          <h2 id="inputTitle">Analiz dosyaları</h2>
+        </div>
+        <button id="clearAll" class="text-button" type="button">Temizle</button>
+      </div>
+
+      <div class="file-list">
+        <label class="file-control required" for="payloadFile">
+          <input id="payloadFile" type="file" accept="application/json,.json">
+          <span class="file-type">Issue JSON</span>
+          <span class="file-requirement">Zorunlu</span>
+          <span id="payloadFileName" class="file-name">Dosya seçilmedi</span>
+          <span class="file-action">Dosya seç</span>
+        </label>
+
+        <label class="file-control" for="metadataFile">
+          <input id="metadataFile" type="file" accept="application/json,.json">
+          <span class="file-type">Metadata JSON</span>
+          <span class="file-requirement">Opsiyonel</span>
+          <span id="metadataFileName" class="file-name">Dosya seçilmedi</span>
+          <span class="file-action">Dosya seç</span>
+        </label>
+
+        <label class="file-control" for="fieldDescriptionsFile">
+          <input id="fieldDescriptionsFile" type="file" accept="application/json,.json">
+          <span class="file-type">Türkçe Alan Açıklamaları</span>
+          <span class="file-requirement">Opsiyonel</span>
+          <span id="fieldDescriptionsFileName" class="file-name">Dosya seçilmedi</span>
+          <span class="file-action">Dosya seç</span>
+        </label>
+
+        <label class="file-control" for="checklistFile">
+          <input id="checklistFile" type="file" accept="application/json,.json">
+          <span class="file-type">Checklist JSON</span>
+          <span class="file-requirement">Opsiyonel</span>
+          <span id="checklistFileName" class="file-name">Dosya seçilmedi</span>
+          <span class="file-action">Dosya seç</span>
+        </label>
+      </div>
+
+      <div class="model-section">
+        <label for="modelSelect">Model</label>
+        <select id="modelSelect" disabled>
+          <option>Modeller yükleniyor...</option>
+        </select>
+        <p id="modelDetails" class="supporting-text">Kurulu Ollama modelleri getiriliyor.</p>
+
+        <label class="toggle-row" for="thinkingToggle">
+          <span>
+            <strong>Thinking modu</strong>
+            <small id="thinkingHint">Seçilen model destekliyorsa kullanılabilir.</small>
+          </span>
+          <span class="switch">
+            <input id="thinkingToggle" type="checkbox" disabled>
+            <span class="switch-track"></span>
+          </span>
+        </label>
+      </div>
+
+      <button id="analyzeButton" class="primary-button" type="button">
+        <span class="button-label">Analiz Et</span>
+        <span class="button-loader" aria-hidden="true"></span>
+      </button>
+      <p id="requestStatus" class="request-status" aria-live="polite"></p>
+    </aside>
+
+    <section class="report-panel" aria-labelledby="reportTitle">
+      <div class="panel-heading report-heading">
+        <div>
+          <p class="step-label">Çıktı</p>
+          <h2 id="reportTitle">Denetim raporu</h2>
+        </div>
+        <span id="reportModel" class="model-badge" hidden></span>
+      </div>
+
+      <div id="report" class="report-empty">
+        <div class="empty-mark">AI</div>
+        <h3>Analiz bekleniyor</h3>
+        <p>Issue dosyasını ve kullanmak istediğin modeli seçerek analizi başlat.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="/demo/js/app.js" defer></script>
+</body>
+</html>

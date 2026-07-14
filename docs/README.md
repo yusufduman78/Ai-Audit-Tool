@@ -3,6 +3,7 @@
 Bu klasör mimari belgeleri, değerlendirme çalışmaları ve diyagram kaynakları için ayrılmıştır.
 
 - [Güncel sistem mimarisi](architecture/guncel_sistem_mimarisi.md): Katmanlar, uçtan uca iş akışı, field descriptions kullanımı, çıktı stratejisi ve güncel UML diyagramları.
+- [Kütüphane ve demo ayrımı](architecture/library_demo_ayrimi.md): Üretim API'si, kurum transport sözleşmesi ve yerel demo paketlerinin sınırları.
 - [Mimari belgeler](architecture/README.md): Mimari klasörünün içerik özeti.
 - `diagrams/`: UML ve benzeri bağımsız diyagram kaynakları.
 - `evaluation/`: LLM değerlendirme stratejisi, demo akışı ve senaryo tasarım notları.

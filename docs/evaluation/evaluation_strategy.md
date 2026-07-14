@@ -6,7 +6,7 @@ Bu dokuman, audit sisteminin LLM kalitesini tekrarlanabilir bicimde olcmek icin 
 
 Amaç sadece guzel gorunen cevap almak degildir. Modelin desteklenen bulgulari yakalayip yakalamadigi, kanita dayanip dayanmadigi, kanitlanmayan durumlarda temkinli davranip davranmadigi ve prompt injection metinlerine uymadigi olculmelidir.
 
-Mevcut Java testleri normalize, metadata, checklist ve prompt olusumunun deterministic davranisini test eder. Bu evaluation katmani ise `/api/analyze` akisinin LLM ile uretilen sonucunu degerlendirir.
+Mevcut Java testleri normalize, metadata, checklist ve prompt olusumunun deterministic davranisini test eder. Bu evaluation katmani ise yerel demonun `/demo/api/analyze` akisinin LLM ile uretilen sonucunu degerlendirir.
 
 ## Temel Ilkeler
 
@@ -78,7 +78,7 @@ Her uretilen kayit, ureticinin yazdigi beklenen sonucla birlikte saklanir. Bu ne
 
 ### Faz 3 - Calistirma ve Sonuc Kaydi
 
-Calistirici, dogrudan Ollama yerine `/api/analyze` endpointine istek atar. Boylece normalize, metadata eslestirme, prompt olusumu ve agent istemcisi birlikte test edilir.
+Calistirici, dogrudan Ollama yerine `/demo/api/analyze` endpointine istek atar. Boylece normalize, metadata eslestirme, prompt olusumu ve demo agent istemcisi birlikte test edilir.
 
 Her calisma sonucu su bilgileri kaydetmelidir:
 

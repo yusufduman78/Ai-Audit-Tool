@@ -2,8 +2,8 @@ package com.yusuf.audittool.normalize;
 
 import org.springframework.stereotype.Service;
 
+import com.yusuf.audittool.api.AuditInput;
 import com.yusuf.audittool.model.AgentContext;
-import com.yusuf.audittool.model.AnalyzeRequest;
 import com.yusuf.audittool.checklist.ChecklistMapper;
 import com.yusuf.audittool.metadata.MetadataMapper;
 
@@ -33,30 +33,30 @@ public class NormalizeService {
         this.metadataMapper = metadataMapper;
     }
 
-    public AgentContext normalize(AnalyzeRequest request) {
-        if (request == null || request.getPayload() == null || request.getPayload().isNull()) {
+    public AgentContext normalize(AuditInput input) {
+        if (input == null || input.getPayload() == null || input.getPayload().isNull()) {
             throw new IllegalArgumentException("Payload is required.");
         }
 
-        CommentExtraction commentExtraction = commentExtractor.extract(request.getPayload());
+        CommentExtraction commentExtraction = commentExtractor.extract(input.getPayload());
         FieldClassification classification = fieldClassifier.classify(
-                jsonWalker.walk(request.getPayload()),
+                jsonWalker.walk(input.getPayload()),
                 commentExtraction.excludedPathPrefixes()
         );
         metadataMapper.enrich(
                 classification.getActiveFields(),
                 classification.getEmptyFields(),
-                request.getMetadata(),
-                request.getFieldDescriptions(),
+                input.getMetadata(),
+                input.getFieldDescriptions(),
                 classification.getStatistics()
         );
 
         AgentContext context = new AgentContext();
-        context.setSourceInfo(sourceInfoExtractor.extract(request.getPayload()));
+        context.setSourceInfo(sourceInfoExtractor.extract(input.getPayload()));
         context.setActiveFields(classification.getActiveFields());
         context.setEmptyFields(classification.getEmptyFields());
         context.setCommentContext(commentExtraction.commentContext());
-        context.setChecklistContext(checklistMapper.map(request.getChecklist()));
+        context.setChecklistContext(checklistMapper.map(input.getChecklist()));
         context.setStatistics(classification.getStatistics());
 
         return context;

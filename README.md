@@ -1,6 +1,6 @@
 # Generic AI Audit Tool
 
-Generic AI Audit Tool, Jira benzeri yapilandirilmis JSON kayitlarini normalize eden ve local Ollama modeliyle kanita dayali denetim raporu ureten bir Spring Boot uygulamasidir.
+Generic AI Audit Tool, Jira benzeri yapilandirilmis JSON kayitlarini normalize edip bir LLM endpointi icin kanita dayali denetim promptu olusturan Java kutuphanesidir. Projede ayrica Ollama ile calisan bir Spring Boot demosu bulunur.
 
 Ilk kullanim alani Jira issue verileridir. Normalize katmani belirli bir issue tipine bagli degildir; nested object, array, custom field, metadata, checklist ve comment bilgilerini ortak bir agent context yapisina donusturur.
 
@@ -9,8 +9,10 @@ Ilk kullanim alani Jira issue verileridir. Normalize katmani belirli bir issue t
 - JSON payload icindeki aktif, bos, null ve noise alanlari ayirir.
 - Custom field metadata bilgisini teknik field ID'leriyle eslestirir.
 - Checklist maddelerini ve Jira comment gecmisini ayri baglam olarak tasir.
-- Local LLM icin denetlenebilir bir prompt olusturur.
-- Ollama JSON Schema destegiyle yapilandirilmis audit raporu ister.
+- Entegrasyon uygulamasinin verdigi LLM endpointi icin denetlenebilir bir prompt olusturur.
+- Kurumun mesaj sozlesmesini `AgentTransport` arayuzu arkasinda tutar.
+- Ana kutuphane akisinda model cevabini parse etmeden metin olarak dondurur.
+- Demo akisinda Ollama JSON Schema destegiyle yapilandirilmis audit raporu ister.
 - Kurulu Ollama modellerini arayuzden secmeye ve desteklenen modellerde thinking modunu analiz bazinda acmaya izin verir.
 - Bulgulari, gozlemleri ve son oneriyi web arayuzunde gosterir.
 - Model raporunu parse edip zorunlu alanlar ve severity degerleri bakimindan dogrular.
@@ -19,8 +21,8 @@ Ilk kullanim alani Jira issue verileridir. Normalize katmani belirli bir issue t
 
 - Java 21
 - Maven 3.9+
-- Ollama 0.31 veya daha yeni bir surum
-- Varsayilan model icin yaklasik 3 GB bos disk alani
+- Yerel demoyu calistirmak icin Ollama 0.31 veya daha yeni bir surum
+- Demo varsayilan modeli icin yaklasik 3 GB bos disk alani
 
 Varsayilan ve mevcut evaluation setinde daha basarili model:
 
@@ -38,10 +40,10 @@ Proje kok dizininde:
 mvn spring-boot:run
 ```
 
-Ardindan web arayuzunu ac:
+Ardindan demo web arayuzunu ac:
 
 ```text
-http://localhost:8080
+http://localhost:8080/demo/index.html
 ```
 
 Arayuzde issue, metadata, Turkce alan aciklamalari ve checklist JSON dosyalari ayri ayri yuklenebilir. Hazir dort dosyali ornekler `evaluation/demo-inputs/` altindadir. `evaluation/scenarios/fixtures/` altindaki tam `AnalyzeRequest` fixture dosyalari da yalnizca `Issue JSON` alanina yuklenebilir; arayuz bunlarin icindeki metadata, field descriptions ve checklist bilgisini otomatik kullanir.
@@ -55,19 +57,19 @@ Uygulamayi durdurmak icin uygulamanin calistigi terminalde `Control+C` kullanili
 Saglik kontrolu:
 
 ```bash
-curl http://localhost:8080/api/health
+curl http://localhost:8080/demo/api/health
 ```
 
 Kurulu Ollama modellerini ve varsayilan profili gormek:
 
 ```bash
-curl http://localhost:8080/api/models
+curl http://localhost:8080/demo/api/models
 ```
 
 Normalize edilen baglami gormek:
 
 ```bash
-curl -X POST http://localhost:8080/api/normalize \
+curl -X POST http://localhost:8080/demo/api/normalize \
   -H "Content-Type: application/json" \
   --data-binary @evaluation/scenarios/fixtures/aud-002-missing-acceptance-criteria.json
 ```
@@ -75,7 +77,7 @@ curl -X POST http://localhost:8080/api/normalize \
 LLM analizini calistirmak:
 
 ```bash
-curl -X POST http://localhost:8080/api/analyze \
+curl -X POST http://localhost:8080/demo/api/analyze \
   -H "Content-Type: application/json" \
   --data-binary @evaluation/scenarios/fixtures/aud-002-missing-acceptance-criteria.json
 ```
@@ -98,7 +100,7 @@ Temel request sozlesmesi:
 
 ## Konfigurasyon
 
-Varsayilan ayarlar `src/main/resources/application.properties` icindedir:
+Yerel demo ayarlari `src/main/resources/demo/application-demo.properties` icindedir:
 
 ```properties
 server.port=8080
@@ -125,7 +127,7 @@ Sabit `seed` ve dusuk `temperature`, ayni model ve prompt ile tekrar calistirmal
 
 ### Model ve Thinking Secimi
 
-Web arayuzu `/api/models` uzerinden makinede kurulu modelleri listeler. `qwen3:4b-instruct` mevcut evaluation setinde finding kapsami daha iyi oldugu icin varsayilandir. `phi4-mini-reasoning:latest` secilebilir durumda tutulur; Ingilizce veya Turkce cikti uretebilir ancak testlerde bazi acik ihlalleri observation olarak siniflandirmistir.
+Web arayuzu `/demo/api/models` uzerinden makinede kurulu modelleri listeler. `qwen3:4b-instruct` mevcut evaluation setinde finding kapsami daha iyi oldugu icin varsayilandir. `phi4-mini-reasoning:latest` secilebilir durumda tutulur; Ingilizce veya Turkce cikti uretebilir ancak testlerde bazi acik ihlalleri observation olarak siniflandirmistir.
 
 Bu asamada raporu Turkceye cevirmek icin ikinci bir model cagrisi yapilmaz. Ikinci cagri gecikmeyi ve anlamsal kayip riskini artirir. Modelin urettigi dil oldugu gibi gosterilir.
 
@@ -156,9 +158,10 @@ Java testleri normalize, metadata, checklist, comment extraction, prompt olustur
 ## Proje Yapisi
 
 ```text
-src/main/java/                 Spring Boot uygulama kodu
+src/main/java/.../api/         Kutuphane giris API'si
+src/main/java/.../demo/        Yerel Spring Boot ve Ollama demosu
 src/main/resources/prompts/   Sistem promptu
-src/main/resources/static/    Web arayuzu
+src/main/resources/static/demo/ Web demo arayuzu
 src/test/java/                 Java testleri
 evaluation/scenarios/         Fixture ve expected-result sozlesmeleri
 evaluation/demo-inputs/       Ayri issue, metadata ve checklist demo dosyalari
@@ -169,6 +172,7 @@ docs/evaluation/              Demo ve model degerlendirme belgeleri
 ## Demo ve Degerlendirme
 
 - Demo sirasi: `docs/evaluation/demo_walkthrough.md`
+- Kutuphane ve demo siniri: `docs/architecture/library_demo_ayrimi.md`
 - Senaryo katalogu: `docs/evaluation/scenario_catalog.md`
 - Guncel manuel sonuc ozeti: `docs/evaluation/current_results.md`
 - Ayrintili evaluation yaklasimi: `docs/evaluation/evaluation_strategy.md`

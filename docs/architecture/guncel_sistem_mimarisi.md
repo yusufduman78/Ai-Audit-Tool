@@ -1,5 +1,7 @@
 # Generic AI Audit Tool - Güncel Sistem Mimarisi
 
+> Not: Ana teslimat artık `AuditEngine` ve `AgentTransport` üzerinden kullanılan bir kütüphane akışıdır. Bu belgedeki Spring MVC, Ollama ve yapılandırılmış JSON rapor bölümleri yerel demoyu anlatır. Güncel paket sınırı için [Kütüphane ve Demo Ayrımı](library_demo_ayrimi.md) belgesini esas alın.
+
 Bu belge, uygulamanın mevcut kod yapısını ve çalışma akışını açıklar. İlk planlama belgesinden sonra eklenen yorum işleme, yapılandırılmış rapor, model seçimi, thinking desteği ve web arayüzü gibi parçalar burada güncel hâlleriyle ele alınmıştır.
 
 Belgenin amacı yalnızca sınıfları listelemek değildir. Bir isteğin sisteme girdiği andan kullanıcıya rapor olarak döndüğü ana kadar hangi verinin nereden geçtiğini, hangi sınıfın hangi sorumluluğu taşıdığını ve sistemin hangi noktalarda model davranışına bağımlı olduğunu göstermektir.

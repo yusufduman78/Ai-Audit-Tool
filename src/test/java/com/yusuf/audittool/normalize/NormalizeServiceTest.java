@@ -9,11 +9,11 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import com.yusuf.audittool.model.AgentContext;
-import com.yusuf.audittool.model.AnalyzeRequest;
-import com.yusuf.audittool.model.EmptyField;
+import com.yusuf.audittool.api.AuditInput;
 import com.yusuf.audittool.checklist.ChecklistMapper;
 import com.yusuf.audittool.metadata.MetadataMapper;
+import com.yusuf.audittool.model.AgentContext;
+import com.yusuf.audittool.model.EmptyField;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -32,7 +32,7 @@ class NormalizeServiceTest {
 
     @Test
     void normalizesPayloadIntoAgentContext() throws Exception {
-        AnalyzeRequest request = request("""
+        AuditInput request = request("""
                 {
                   "key": "REQ-101",
                   "fields": {
@@ -66,7 +66,7 @@ class NormalizeServiceTest {
 
     @Test
     void enrichesContextWithMetadataAndDescriptions() throws Exception {
-        AnalyzeRequest request = request("""
+        JsonNode payload = payload("""
                 {
                   "key": "REQ-101",
                   "fields": {
@@ -75,19 +75,20 @@ class NormalizeServiceTest {
                   }
                 }
                 """);
-        request.setMetadata(jsonMapper.readTree("""
+        JsonNode metadata = jsonMapper.readTree("""
                 {
                   "customfield_13104": {
                     "name": "Acceptance Criteria",
                     "schemaType": "string"
                   }
                 }
-                """));
-        request.setFieldDescriptions(jsonMapper.readTree("""
+                """);
+        JsonNode descriptions = jsonMapper.readTree("""
                 {
                   "customfield_13104": "Requirement kabul kriterlerini belirtir."
                 }
-                """));
+                """);
+        AuditInput request = new AuditInput(payload, metadata, descriptions, null);
 
         AgentContext context = normalizeService.normalize(request);
 
@@ -99,7 +100,7 @@ class NormalizeServiceTest {
 
     @Test
     void includesChecklistContextWhenProvided() throws Exception {
-        AnalyzeRequest request = request("""
+        JsonNode payload = payload("""
                 {
                   "key": "REQ-101",
                   "fields": {
@@ -107,12 +108,13 @@ class NormalizeServiceTest {
                   }
                 }
                 """);
-        request.setChecklist(jsonMapper.readTree("""
+        JsonNode checklist = jsonMapper.readTree("""
                 [
                   "Requirement açık olmalıdır.",
                   "Done için test kanıtı bulunmalıdır."
                 ]
-                """));
+                """);
+        AuditInput request = new AuditInput(payload, null, null, checklist);
 
         AgentContext context = normalizeService.normalize(request);
 
@@ -123,7 +125,7 @@ class NormalizeServiceTest {
 
     @Test
     void extractsCommentsWithoutAddingTheirChildrenAsGenericFields() throws Exception {
-        AnalyzeRequest request = request("""
+        AuditInput request = request("""
                 {
                   "key": "REQ-101",
                   "fields": {
@@ -154,7 +156,7 @@ class NormalizeServiceTest {
 
     @Test
     void rejectsMissingPayload() {
-        AnalyzeRequest request = new AnalyzeRequest();
+        AuditInput request = new AuditInput(null);
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
@@ -164,11 +166,12 @@ class NormalizeServiceTest {
         assertEquals("Payload is required.", exception.getMessage());
     }
 
-    private AnalyzeRequest request(String json) throws Exception {
-        JsonNode payload = jsonMapper.readTree(json);
-        AnalyzeRequest request = new AnalyzeRequest();
-        request.setPayload(payload);
-        return request;
+    private AuditInput request(String json) throws Exception {
+        return new AuditInput(payload(json));
+    }
+
+    private JsonNode payload(String json) throws Exception {
+        return jsonMapper.readTree(json);
     }
 
     private List<String> activePaths(AgentContext context) {

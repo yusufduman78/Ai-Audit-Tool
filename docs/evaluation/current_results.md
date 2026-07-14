@@ -10,7 +10,7 @@ Bu belge tam benchmark raporu degildir. Demo oncesi yapilan kisa, tekrar edilebi
 - Maximum output: `1200`
 - Temperature: `0.2`
 - Seed: `42`
-- Akis: Fixture -> `/api/analyze` -> JSON Schema -> `AuditReport`
+- Akis: Fixture -> `/demo/api/analyze` -> JSON Schema -> `AuditReport`
 
 ## Sonuclar
 

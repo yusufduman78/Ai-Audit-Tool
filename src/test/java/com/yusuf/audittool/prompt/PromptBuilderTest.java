@@ -38,6 +38,7 @@ class PromptBuilderTest {
         String template = loader.load();
 
         assertTrue(template.contains("{{CONTEXT}}"));
+        assertTrue(template.contains("{{OUTPUT_REQUIREMENTS}}"));
         assertTrue(template.contains("untrusted data"));
         assertTrue(template.contains("DO-178C / ED-12C"));
         assertTrue(template.contains("not certification evidence"));
@@ -46,23 +47,47 @@ class PromptBuilderTest {
         assertTrue(template.contains("Evaluate tension between a comment and a field in this order"));
         assertTrue(template.contains("A populated field satisfies"));
         assertTrue(template.contains("Insufficient Context"));
-        assertTrue(template.contains("`observations` array"));
         assertTrue(template.contains("apply this sequence"));
         assertTrue(template.contains("report the timing tension as an `Observation`"));
         assertTrue(template.contains("already evaluated"));
         assertTrue(template.contains("Source: payload"));
         assertTrue(template.contains("Do not introduce a new artifact type"));
         assertTrue(template.contains("status value"));
-        assertTrue(template.contains("Write `summary`"));
         assertTrue(template.contains("Observations express uncertainty or risk"));
-        assertTrue(template.contains("Final Self-Check"));
-        assertTrue(template.contains("without a severity field"));
-        assertTrue(template.contains("self-corrections"));
-        assertTrue(template.contains("valid JSON object"));
         assertFalse(template.contains("no-finding sentence"));
         assertFalse(template.contains("Gozlemler ve Yetersiz Baglam"));
         assertTrue(template.contains("BEGIN_AUDIT_CONTEXT"));
         assertTrue(template.contains("END_AUDIT_CONTEXT"));
+    }
+
+    @Test
+    void loadsJsonOutputRequirementsFromClasspath() {
+        String requirements = new PromptTemplateLoader("prompts/output_json.md").load();
+
+        assertTrue(requirements.contains("valid JSON object"));
+        assertTrue(requirements.contains("`findings` and `observations` are present as arrays"));
+        assertTrue(requirements.contains("Write `summary`"));
+        assertTrue(requirements.contains("Final Self-Check"));
+        assertTrue(requirements.contains("without a severity field"));
+        assertTrue(requirements.contains("self-corrections"));
+    }
+
+    @Test
+    void buildsMarkdownReportPromptForLibraryUse() {
+        PromptBuilder builder = new PromptBuilder(
+                new PromptTemplateLoader("prompts/core_auditor.md"),
+                new AgentContextRenderer(),
+                new PromptTemplateLoader("prompts/output_markdown.md")
+        );
+
+        String prompt = builder.build(context());
+
+        assertTrue(prompt.contains("## Özet"));
+        assertTrue(prompt.contains("## Bulgular"));
+        assertTrue(prompt.contains("## Gözlemler ve Yetersiz Bağlam"));
+        assertTrue(prompt.contains("## Önerilen Aksiyonlar"));
+        assertFalse(prompt.contains("valid JSON object"));
+        assertFalse(prompt.contains("{{OUTPUT_REQUIREMENTS}}"));
     }
 
     @Test
@@ -78,6 +103,7 @@ class PromptBuilderTest {
         assertTrue(contextStart < fieldValue);
         assertTrue(fieldValue < contextEnd);
         assertFalse(prompt.contains("{{CONTEXT}}"));
+        assertFalse(prompt.contains("{{OUTPUT_REQUIREMENTS}}"));
         assertFalse(prompt.contains("Metadata: not provided"));
         assertFalse(prompt.contains("STATISTICS"));
         assertTrue(prompt.contains("COMMENTS"));
