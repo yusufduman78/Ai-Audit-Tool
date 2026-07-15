@@ -1,25 +1,46 @@
-# Evaluation Fixtures
+# Evaluation Fixture'ları
 
-Bu klasor, LLM davranisini degerlendirmek icin kullanilan request fixture'larini ve expected-result sozlesmelerini icerir.
+Bu klasör, LLM davranışını aynı girdiler ve aynı beklenen sonuç sözleşmeleriyle karşılaştırmak için kullanılan test verilerini içerir. Fixture'lar production uygulamasının runtime bağımlılığı değildir.
 
-- `scenarios/fixtures/`: `/api/normalize` ve `/api/analyze` endpointlerine gonderilebilen `AnalyzeRequest` JSON dosyalari.
-- `scenarios/definitions/`: Generator'un okuyacagi buyuk veya varyasyonlu senaryo tanimlari.
-- `scenarios/expected/`: Modelin gormedigi, beklenen audit davranisini tanimlayan sozlesmeler.
-- `scenarios/generated/`: Python generator eklendiginde olusacak varyasyonlar icin ayrilmistir.
-- `demo-inputs/`: Web arayuzune ayri ayri yuklenebilen `issue.json`, `metadata.json` ve `checklist.json` paketleri.
+Değerlendirme yönteminin açıklaması için [Değerlendirme Belgeleri](../docs/evaluation/README.md) dizininden başlayın.
 
-Fixture requestleri production uygulamasinin runtime bagimliligi degildir. Fixture ve expected dosyalari, model davranisini ayni audit sozlesmesine gore karsilastirmak icin referans saglar.
+## Klasörler
 
-Guncel manuel model sonuclari `docs/evaluation/current_results.md`, web arayuzu demo sirasi ise `docs/evaluation/demo_walkthrough.md` icindedir.
+| Klasör | İçerik |
+| --- | --- |
+| `scenarios/fixtures/` | Demo API'ye gönderilebilen tam request JSON dosyaları |
+| `scenarios/definitions/` | Büyük veya generator ile üretilecek senaryoların deterministic tanımları |
+| `scenarios/expected/` | Modelin görmediği semantik beklenen sonuç sözleşmeleri |
+| `demo-inputs/` | Web arayüzüne ayrı ayrı yüklenen issue, metadata, field descriptions ve checklist dosyaları |
+| `local/` | Git dışında tutulan generator, model run ve geçici çıktı dosyaları |
 
-Manuel normalize testi:
+## Tam Fixture ile API Testi
+
+Demo çalışırken normalize sonucunu görmek için:
 
 ```bash
-curl -X POST http://localhost:8080/api/normalize \
+curl -X POST http://localhost:8080/demo/api/normalize \
   -H "Content-Type: application/json" \
-  --data @evaluation/scenarios/fixtures/aud-001-done-without-evidence.json
+  --data-binary @evaluation/scenarios/fixtures/aud-001-done-without-evidence.json
 ```
 
-Manuel analiz testi icin ayni istekte endpointi `/api/analyze` olarak degistir.
+Model analizini çalıştırmak için aynı dosyayı `/demo/api/analyze` endpointine gönderin:
 
-Web arayuzu testi icin `demo-inputs/` altindaki bir senaryo klasorunden issue, metadata, field descriptions ve checklist dosyalarini ilgili alanlara yukle. Arayuz bu dosyalari tek `AnalyzeRequest` icinde birlestirir; backend'e ayri HTTP istekleri gonderilmez.
+```bash
+curl -X POST http://localhost:8080/demo/api/analyze \
+  -H "Content-Type: application/json" \
+  --data-binary @evaluation/scenarios/fixtures/aud-001-done-without-evidence.json
+```
+
+## Ayrı Dosyalarla Arayüz Testi
+
+`demo-inputs/` altındaki bir senaryo klasöründen şu dört dosya seçilir:
+
+1. `issue.json`
+2. `metadata.json`
+3. `field-descriptions.json`
+4. `checklist.json`
+
+Arayüz bu dosyaları tarayıcıda tek demo request gövdesine birleştirir. Backend'e dört ayrı HTTP isteği gönderilmez.
+
+Beklenen sonuçlar bire bir metin eşleşmesi değildir. Finding/observation sınıflandırması, kullanılan kanıt ve desteklenmeyen iddialar [Senaryo Kataloğu](../docs/evaluation/scenario_catalog.md) ile değerlendirilir. Bilinen model sonuçları [Güncel Model Sonuçları](../docs/evaluation/current_results.md) belgesindedir.

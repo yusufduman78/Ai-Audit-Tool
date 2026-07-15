@@ -2,6 +2,8 @@
 
 Bu belge tam benchmark raporu degildir. Demo oncesi yapilan kisa, tekrar edilebilir bir manuel kontrolun sonucudur.
 
+> Bu belge tarihli bir sonuç snapshot'ıdır; model veya prompt değiştiğinde otomatik olarak güncellenmez. Ölçüm yöntemi için [Değerlendirme Stratejisi](evaluation_strategy.md), senaryo sözleşmeleri için [Senaryo Kataloğu](scenario_catalog.md) esas alınmalıdır.
+
 ## Calisma Bilgisi
 
 - Tarih: 12 Temmuz 2026

@@ -1,5 +1,7 @@
 # LLM Degerlendirme Stratejisi
 
+> Belge ilişkileri ve veri klasörleri için [Değerlendirme Belgeleri](README.md), senaryo ayrıntıları için [Senaryo Kataloğu](scenario_catalog.md), mevcut deneylerin özeti için [Güncel Model Sonuçları](current_results.md) belgesine bakın.
+
 ## Amac
 
 Bu dokuman, audit sisteminin LLM kalitesini tekrarlanabilir bicimde olcmek icin tasarlanan evaluation katmanini tanimlar.
@@ -91,7 +93,7 @@ Her calisma sonucu su bilgileri kaydetmelidir:
 - Toplam yanit suresi
 - Calisma zamani ve tarih
 
-Model sonuclari git tarafindan izlenmez. Senaryo tanimlari ve beklenen sonuclar commitlenir; buyuk run ciktilari `evaluation/runs/` ve raporlar `evaluation/reports/` altinda yerel kalir.
+Model sonuçları Git tarafından izlenmez. Senaryo tanımları ve beklenen sonuçlar commitlenir; büyük run çıktıları ve yerel raporlar `evaluation/local/out/` altında kalır.
 
 ### Faz 4 - Puanlama
 
@@ -114,42 +116,40 @@ Kalite kapilari gecilmeden latency ile model secilmez. Once zorunlu bulgu kapsam
 
 ### Faz 5 - Yapilandirilmis Sonuc
 
-Bu faz uygulanmistir. Ollama isteginde tam JSON Schema kullanilir. Java tarafi sonucu `AuditReport` modeline parse eder, zorunlu alanlari ve severity degerlerini validate eder; web arayuzu raporu kartlar halinde gosterir.
+Bu faz yerel demo için uygulanmıştır. Demo Ollama isteğinde JSON Schema kullanabilir; Java tarafı sonucu `AuditReport` modeline parse eder, zorunlu alanları ve severity değerlerini validate eder ve web arayüzü geçerli raporu kartlar halinde gösterir.
 
-Sema dogrulamasi modelin audit kararinin dogru oldugunu garanti etmez. False-positive, false-negative ve yanlis `Finding`/`Observation` siniflandirmalari evaluation senaryolariyla ayri izlenir.
+Core kütüphane akışı ise model cevabını JSON'a zorlamadan Markdown metni olarak döndürür. Şema doğrulaması modelin audit kararının doğru olduğunu garanti etmez. False-positive, false-negative ve yanlış `Finding`/`Observation` sınıflandırmaları evaluation senaryolarıyla ayrı izlenir.
 
-## Onerilen Gelecek Klasor Yapisi
+## Mevcut Klasör Yapısı
 
-Bu yapi Faz 2 baslarken olusturulacaktir:
+Mevcut değerlendirme dosyaları şu şekilde ayrılır:
 
 ```text
 evaluation/
-  README.md
-  pyproject.toml
+  README.md                  # Fixture dizini
+  demo-inputs/               # Arayüze ayrı yüklenen JSON paketleri
   scenarios/
-    fixtures/
-    generated/
-    expected/
-  generator/
-    base_records.py
-    mutations.py
-    metadata_variants.py
-  runner/
-    analyze_runner.py
-  evaluator/
-    rubric.py
-    report_builder.py
-  runs/       # gitignored
-  reports/    # gitignored
+    definitions/             # Üretim tanımları
+    fixtures/                # Sabit AnalyzeRequest örnekleri
+    expected/                # Modelin görmediği beklenen sonuçlar
+  local/                     # Git dışında tutulan üretim ve run araçları
+
+docs/evaluation/
+  README.md                  # Belge dizini
+  evaluation_strategy.md
+  scenario_catalog.md
+  demo_data_design.md
+  demo_walkthrough.md
+  current_results.md
 ```
 
-`fixtures/` elle tanimlanan referans requestleri, `generated/` ise ileride Python aracinin uretecegi varyasyonlari tasir.
+`fixtures/` sabit referans requestlerini, `expected/` aynı senaryonun semantik beklentisini taşır. Yerel model çıktıları ve Python araçları `evaluation/local/` altında Git dışında tutulur.
 
-Python burada Java uygulamasinin runtime bagimliligi degildir. Veri uretimi, endpoint cagrisi ve raporlama icin ayri bir gelistirme aracidir. Ilk surumde standart kutuphane yeterli tutulur; ihtiyac dogarsa yalnizca gerekcelendirilmis ek bagimliliklar eklenir.
+Python, Java uygulamasının runtime bağımlılığı değildir. Yalnızca sentetik veri üretimi, yerel endpoint çağrısı ve değerlendirme çalışmaları için geliştirme aracıdır.
 
 ## Beklenen Sonuc Sozlesmesi
 
-Bir senaryonun beklenen bilgisi, ileride JSON olarak asagidaki semantik yapida tutulur:
+Bir senaryonun beklenen bilgisi `evaluation/scenarios/expected/` altında aşağıdaki semantik yapıya benzer JSON dosyalarında tutulur:
 
 ```json
 {
@@ -181,10 +181,11 @@ Kodlar modeli sinirlamak icin prompta verilmez. Bunlar yalnizca test tarafinin o
 - Prompt uzatmak basari varsayilmaz; her yeni kuralin faydasi senaryo puaniyla dogrulanir.
 - Reasoning metninin uzunlugu kalite olcutu degildir. Yalnizca kullaniciya gosterilecek audit sonucunun dogrulugu degerlendirilir.
 
-## Sonraki Somut Teslim
+## Uygulama Durumu
 
-Bu tasarim onaylandiktan sonra sadece Faz 1 uygulanir:
-
-1. `docs/evaluation/scenario_catalog.md` olusturulur.
-2. Ilk 10 senaryonun detayli intent ve expected sozlesmesi yazilir.
-3. Henüz Python, JSON fixture, model indirme veya endpoint calistirma yapilmaz.
+- Senaryo kataloğu, fixture ve expected-result katmanları oluşturulmuştur.
+- Comment, requirement change, prompt injection ve büyük null payload senaryoları kataloğa eklenmiştir.
+- Yerel model çalıştırma ve veri üretim araçları runtime'dan ayrılmış, Git dışında tutulmuştur.
+- Manuel model karşılaştırmaları [Güncel Model Sonuçları](current_results.md) belgesinde kaydedilmiştir.
+- Otomatik semantik puanlayıcı ve toplu rapor üretimi henüz tamamlanmamıştır.
+- Anonimleştirilmiş gerçek kurum verisiyle doğrulama ayrı bir çalışma olarak yapılmalıdır.

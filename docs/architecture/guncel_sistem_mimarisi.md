@@ -1,321 +1,294 @@
 # Generic AI Audit Tool - Güncel Sistem Mimarisi
 
-> Not: Ana teslimat artık `AuditEngine` ve `AgentTransport` üzerinden kullanılan bir kütüphane akışıdır. Bu belgedeki Spring MVC, Ollama ve yapılandırılmış JSON rapor bölümleri yerel demoyu anlatır. Güncel paket sınırı için [Kütüphane ve Demo Ayrımı](library_demo_ayrimi.md) belgesini esas alın.
+Bu belge, çalışan kodun mimari ana kaynağıdır. Sistemin merkezinde başka bir Java uygulamasının kullanabileceği `core` kütüphanesi bulunur. Spring Boot, Ollama, model seçimi ve web arayüzü yalnızca `demo` modülüne aittir.
 
-Bu belge, uygulamanın mevcut kod yapısını ve çalışma akışını açıklar. İlk planlama belgesinden sonra eklenen yorum işleme, yapılandırılmış rapor, model seçimi, thinking desteği ve web arayüzü gibi parçalar burada güncel hâlleriyle ele alınmıştır. Kod Maven reactor içindeki iki modüle ayrılmıştır: `core` kütüphane, `demo` ise yerel Ollama ve web uygulamasıdır.
+Başka bir projeden kullanım için [Kütüphane Entegrasyon Rehberi](../integration/kutuphane_entegrasyonu.md), modül ayrımının gerekçesi için [Kütüphane ve Demo Ayrımı](library_demo_ayrimi.md) belgesini kullanın.
 
-Belgenin amacı yalnızca sınıfları listelemek değildir. Bir isteğin sisteme girdiği andan kullanıcıya rapor olarak döndüğü ana kadar hangi verinin nereden geçtiğini, hangi sınıfın hangi sorumluluğu taşıdığını ve sistemin hangi noktalarda model davranışına bağımlı olduğunu göstermektir.
+## İçindekiler
 
-## 1. Sistemin Amacı
+- [Amaç ve sınır](#amaç-ve-sınır)
+- [Maven modülleri](#maven-modülleri)
+- [Public API](#public-api)
+- [Normalizasyon akışı](#normalizasyon-akışı)
+- [Prompt üretimi](#prompt-üretimi)
+- [Çıktı sözleşmeleri](#çıktı-sözleşmeleri)
+- [Demo mimarisi](#demo-mimarisi)
+- [Güvenlik ve hata sınırları](#güvenlik-ve-veri-sınırları)
+- [Test stratejisi](#test-stratejisi)
+- [Güncel mimari kararlar](#güncel-mimari-kararlar)
 
-Uygulama, Jira benzeri yapılandırılmış iş kayıtlarını yerel bir dil modeliyle denetlemek için geliştirilmiştir. Ham JSON doğrudan modele verilmez. Önce uygulama tarafından gezilir, gereksiz alanlardan ayrılır, metadata ve checklist bilgileriyle zenginleştirilir ve daha küçük bir `AgentContext` hâline getirilir.
+## Amaç ve Sınır
 
-Temel yaklaşım şöyledir:
+Sistem, Jira benzeri yapılandırılmış iş kayıtlarını kanıta dayalı bir denetim değerlendirmesi için hazırlar. Ham JSON doğrudan modele gönderilmez. Önce deterministic Java koduyla normalize edilir, metadata ve checklist ile anlamlandırılır, ardından modele açık sınırları olan bir audit context olarak verilir.
 
 ```text
-Ham iş kaydı
-    -> deterministic normalizasyon
-    -> anlamlandırılmış AgentContext
-    -> sistem promptu
-    -> yerel Ollama modeli
-    -> denetim raporu
+Ham yapılandırılmış kayıt
+        |
+        v
+Deterministic normalizasyon
+        |
+        v
+Anlamlandırılmış AgentContext
+        |
+        v
+Denetim promptu
+        |
+        v
+Entegrasyonun sağladığı LLM transportu
+        |
+        v
+Metin denetim raporu
 ```
 
-Burada "deterministic" ifadesi önemlidir. JSON alanlarını bulma, null alanları eleme, field kimliklerini metadata ile eşleştirme ve yorumları ayırma işlemleri dil modeline bırakılmaz. Model yalnızca hazırlanmış bağlam üzerinde denetim değerlendirmesi yapar.
+Sistemin sorumluluğu şunlardır:
 
-## 2. Maven Modülleri
+- JSON yapısını generic olarak gezmek.
+- Aktif, boş, null ve gürültü alanlarını ayırmak.
+- Custom field kimliklerini metadata ile eşleştirmek.
+- Comment ve checklist bilgisini anlamını koruyarak prompta taşımak.
+- LLM'e kanıta dayalı ve güvenli denetim talimatı vermek.
+
+Sistemin sorumluluğu olmayan işler şunlardır:
+
+- Jira API'sinden veri çekmek.
+- Kurum LLM endpointinin mesaj sözleşmesini tahmin etmek.
+- Model çıktısını kesin doğru veya bağlayıcı karar kabul etmek.
+- DO-178C uygunluğu ya da sertifikasyon sonucu ilan etmek.
+
+## Maven Modülleri
 
 ```text
 root pom.xml
-|- core/   audittool-core: normalize, metadata, checklist, prompt ve public API
-`- demo/   audittool-demo: Spring Boot, Ollama, web arayüzü ve structured rapor görünümü
+|- core/   audittool-core
+`- demo/   audittool-demo -> audittool-core
 ```
 
-`core` modülü `demo` modülünü bilmez. `demo`, `audittool-core` bağımlılığı üzerinden core akışını kullanır ve yalnızca yerel gösterim için gerekli Ollama/HTTP ayrıntılarını ekler. Bu ayrım sayesinde kurum uygulaması sadece `core/target/audittool-core-0.0.1-SNAPSHOT.jar` artifact'ini alıp kendi `AgentTransport` implementasyonunu sağlayabilir.
+| Modül | İçerik | Bağımlılık yönü |
+| --- | --- | --- |
+| `core` | Public API, normalizasyon, metadata, checklist, comment, prompt ve ortak modeller | `demo` paketlerini bilmez |
+| `demo` | Spring Boot, Ollama adapterleri, web arayüzü, structured rapor parserı | `core` artifact'ine bağlıdır |
 
-## 3. Üst Seviye Mimari
+`core` Jackson ve bazı Spring altyapı sınıflarını kullanır; ancak Spring MVC, web arayüzü veya Ollama istemcisine bağlı değildir. Kurum uygulaması yalnızca `audittool-core` artifact'ini tüketebilir.
+
+## Üst Seviye Mimari
 
 ```mermaid
 flowchart LR
-    U[Kullanıcı] --> UI[Web arayüzü]
-    UI --> API[Spring Boot REST API]
-    API --> N[Normalizasyon katmanı]
-    N --> C[AgentContext]
-    C --> P[Prompt katmanı]
-    P --> A[Agent katmanı]
-    A --> O[Ollama]
-    O --> R[Rapor işleme]
-    R --> UI
-
-    M[Metadata JSON] --> N
-    D[Field descriptions JSON] --> N
-    K[Checklist JSON] --> N
+    A[Entegrasyon uygulaması] --> B[AuditInput]
+    B --> C[AuditEngine]
+    C --> D[NormalizeService]
+    D --> E[AgentContext]
+    E --> F[PromptBuilder]
+    F --> G[AgentTransport]
+    G --> H[Kurum LLM endpointi]
+    H --> G
+    G --> C
+    C --> I[String rapor]
 ```
 
-Sistem tek bir Spring Boot uygulamasıdır. Ayrı mikroservisler bulunmaz. Ollama, uygulama dışında çalışan yerel model sunucusudur ve HTTP üzerinden çağrılır.
+Public giriş noktası [`AuditEngine`](../../core/src/main/java/com/yusuf/audittool/api/AuditEngine.java) sınıfıdır. Entegrasyon uygulaması bir [`AgentTransport`](../../core/src/main/java/com/yusuf/audittool/agent/AgentTransport.java) sağlar; core geriye kalan normalizasyon ve prompt bağımlılıklarını varsayılan constructor içinde kurar.
 
-## Katmanlar ve Sorumluluklar
+## Public API
 
-### Kullanıcı arayüzü
+### AuditInput
 
-`demo/src/main/resources/static/demo/` altında bulunan arayüz aşağıdaki işleri yapar:
+[`AuditInput`](../../core/src/main/java/com/yusuf/audittool/api/AuditInput.java) dört `JsonNode` taşır:
 
-- Issue JSON dosyasını alır.
-- Opsiyonel metadata ve checklist dosyalarını alır.
-- `/demo/api/models` üzerinden kurulu Ollama modellerini listeler.
-- Seçilen model ve thinking ayarını analiz isteğine ekler.
-- `/demo/api/analyze` sonucunu rapor, uyarı veya ham çıktı olarak gösterir.
+| Alan | Zorunluluk | Anlam |
+| --- | --- | --- |
+| `payload` | Zorunlu | Denetlenecek issue veya yapılandırılmış kayıt |
+| `metadata` | Opsiyonel | Alan kimliği, adı, şeması, açıklaması ve allowed value bilgileri |
+| `fieldDescriptions` | Opsiyonel | Field ID -> Türkçe/açıklayıcı metin eşleştirmesi |
+| `checklist` | Opsiyonel | Denetim kriterleri veya kontrol listesi |
 
-Arayüz doğrudan Ollama'ya bağlanmaz. Tüm model çağrıları backend üzerinden yapılır.
+Bu alanlar dosya yolu değildir. JSON'un dosyadan veya HTTP'den okunması çağıran uygulamanın sorumluluğudur.
 
-### Controller katmanı
+### AgentEndpoint
 
-Controller sınıfları HTTP sözleşmesini yönetir:
+[`AgentEndpoint`](../../core/src/main/java/com/yusuf/audittool/api/AgentEndpoint.java), hedef URI ve header map'ini taşır. Yalnızca mutlak `http` ve `https` adreslerini kabul eder. Request body veya response alan adlarını tanımlamaz.
 
-- `AnalyzeController`: sağlık kontrolü, normalizasyon ve analiz endpointlerini sunar.
-- `AgentModelController`: Ollama'da kurulu modelleri döndürür.
-- `ApiExceptionHandler`: doğrulama ve bağlantı hatalarını ortak API cevabına çevirir.
+### AgentTransport
 
-Controller sınıfları JSON gezmez, prompt oluşturmaz ve denetim kararı vermez.
+`AgentTransport` tek metotlu bir entegrasyon sınırıdır:
 
-### Service katmanı
+```java
+String send(String prompt, AgentEndpoint endpoint);
+```
 
-Demo modülündeki `AuditService`, yerel web demosunun structured rapor akışını koordine eder:
+Kurumun authentication, request body, timeout ve response parse etme kuralları bu implementasyonda kalır. Core'un kurum endpointine bağımlı olmamasını sağlayan ana abstraction budur.
 
-1. İsteği `NormalizeService` ile normalize eder.
-2. `PromptBuilder` ile model promptunu oluşturur.
-3. `AgentClient` üzerinden modeli çağırır.
-4. Model çıktısını parse etmeyi dener.
-5. Parse edilen raporu doğrular.
-6. Ham çıktı ile varsa doğrulanmış raporu birlikte döndürür.
+### AuditEngine
 
-### Normalizasyon katmanı
+`AuditEngine.analyze(input, endpoint)` şu üç işi yönetir:
 
-Normalizasyon katmanı projenin modelden bağımsız çekirdeğidir:
+1. `AuditInput` değerini `NormalizeService` ile `AgentContext` yapısına dönüştürür.
+2. `PromptBuilder` ile denetim promptu üretir.
+3. Promptu `AgentTransport` ile gönderir ve boş olmayan cevabı trim edilmiş `String` olarak döndürür.
 
-- `GenericJsonWalker`: JSON ağacını recursive olarak gezer.
-- `CommentExtractor`: yorum koleksiyonlarını ana field akışından ayırır.
-- `CommentTextExtractor`: düz metin ve Atlassian Document Format benzeri içeriklerden yorum metni çıkarır.
-- `FieldClassifier`: alanları aktif, boş, null ve noise olarak sınıflandırır.
-- `MetadataMapper`: alanları metadata ve field açıklamalarıyla zenginleştirir.
-- `ChecklistMapper`: checklist girdisini ortak modele dönüştürür.
-- `SourceInfoExtractor`: kayıt kimliği ve başlığı gibi kaynak bilgisini bulur.
-- `NormalizeService`: bu parçaları doğru sırayla çalıştırıp `AgentContext` üretir.
+Core, final model metnini JSON'a zorlamaz veya parse etmez.
 
-### Prompt katmanı
-
-- `PromptTemplateLoader`, `core_auditor.md` dosyasını okur.
-- `AgentContextRenderer`, Java modelini okunabilir metne dönüştürür.
-- `PromptBuilder`, sistem promptundaki `{{CONTEXT}}` alanını dinamik bağlamla değiştirir.
-
-Prompt içindeki sabit talimatlar ile kullanıcıdan gelen veri açık sınırlarla ayrılır. Issue, metadata, açıklama, checklist ve yorum metinleri güvenilmeyen denetim verisi kabul edilir.
-
-### Agent katmanı
-
-- `AgentClient`, model sağlayıcısından bağımsız arayüzdür.
-- `OllamaAgentClient`, Ollama `/api/generate` endpointini çağırır.
-- `OllamaModelCatalog`, `/api/tags` üzerinden kurulu modelleri okur.
-- `OllamaProperties`, model URL'si ve üretim parametrelerini taşır.
-
-Model seçimi istek içinde verilirse yalnızca o analiz için kullanılır. Verilmezse `application.properties` içindeki varsayılan model kullanılır.
-
-### Rapor katmanı
-
-- `AuditReportParser`, model metnini `AuditReport` nesnesine çevirmeyi dener.
-- `AuditReportValidator`, zorunlu alanları, severity değerlerini, evidence listesini ve tekrar eden bulguları kontrol eder.
-- Parse veya validation başarısız olduğunda `agentOutput` kaybolmaz; ham çıktı kullanıcıya döner.
-
-## 4. Analyze İsteğinin Uçtan Uca Akışı
+## Uçtan Uca Core Akışı
 
 ```mermaid
 sequenceDiagram
-    actor Kullanici as Kullanıcı
-    participant UI as Web Arayüzü
-    participant AC as AnalyzeController
-    participant AS as AuditService
-    participant NS as NormalizeService
-    participant PB as PromptBuilder
-    participant OA as OllamaAgentClient
-    participant OL as Ollama
-    participant RP as Parser ve Validator
+    participant App as Entegrasyon uygulaması
+    participant Engine as AuditEngine
+    participant Normalize as NormalizeService
+    participant Prompt as PromptBuilder
+    participant Transport as AgentTransport
+    participant LLM as LLM endpointi
 
-    Kullanici->>UI: Issue, metadata ve checklist seçer
-    UI->>AC: POST /demo/api/analyze
-    AC->>AS: analyze(request)
-    AS->>NS: normalize(request)
-    NS-->>AS: AgentContext
-    AS->>PB: build(context)
-    PB-->>AS: Final prompt
-    AS->>OA: analyze(prompt, agentOptions)
-    OA->>OL: POST /api/generate
-    OL-->>OA: Model metni
-    OA-->>AS: agentOutput
-    AS->>RP: parse ve validate
-    RP-->>AS: AuditReport veya hata listesi
-    AS-->>AC: AnalyzeResponse
-    AC-->>UI: JSON response
-    UI-->>Kullanici: Rapor veya ham çıktı
+    App->>Engine: analyze(AuditInput, AgentEndpoint)
+    Engine->>Normalize: normalize(input)
+    Normalize-->>Engine: AgentContext
+    Engine->>Prompt: build(context)
+    Prompt-->>Engine: final prompt
+    Engine->>Transport: send(prompt, endpoint)
+    Transport->>LLM: kuruma özel HTTP isteği
+    LLM-->>Transport: kuruma özel response
+    Transport-->>Engine: final metin
+    Engine-->>App: String rapor
 ```
 
-### 4.1 AnalyzeRequest
+## Normalizasyon Akışı
 
-İstek modeli şu alanları taşır:
+[`NormalizeService`](../../core/src/main/java/com/yusuf/audittool/normalize/NormalizeService.java), deterministic veri hazırlama adımlarını tek sırada birleştirir:
+
+1. Payload yoksa isteği reddeder.
+2. `CommentExtractor` ile comment kaynağını ve generic alan listesinden çıkarılacak path'i belirler.
+3. `GenericJsonWalker` ile payload içindeki node'ları path bilgisiyle gezer.
+4. `FieldClassifier` ile aktif, boş, null ve gürültü alanlarını ayırır.
+5. `MetadataMapper` ile aktif ve boş alanları metadata ve field descriptions bilgisiyle zenginleştirir.
+6. `SourceInfoExtractor` ile kayıt kimliği ve kısa etiketini çıkarır.
+7. `ChecklistMapper` ile checklist yapısını ortak modele dönüştürür.
+8. Sonuçları `AgentContext` içinde toplar.
 
 ```text
-AnalyzeRequest
-|- payload             zorunlu issue veya iş kaydı
-|- metadata            opsiyonel field metadata
-|- fieldDescriptions   opsiyonel açıklama sözlüğü
-|- checklist           opsiyonel kontrol listesi
-`- agentOptions        opsiyonel model ve thinking seçimi
+AuditInput
+  |- payload -----------------> walker + classifier + comment extractor
+  |- metadata ----------------> metadata registry
+  |- fieldDescriptions -------> metadata description enrichment
+  `- checklist ---------------> ChecklistContext
+                                      |
+                                      v
+                                  AgentContext
 ```
 
-Arayüzde issue, metadata, Türkçe alan açıklamaları ve checklist ayrı dosyalar olarak seçilebilse de backend'e tek bir `AnalyzeRequest` gönderilir. Türkçe alan açıklamaları dosyası opsiyoneldir ve `fieldDescriptions` alanına yerleştirilir.
+### GenericJsonWalker
 
-## 5. Normalizasyon Akışı
+[`GenericJsonWalker`](../../core/src/main/java/com/yusuf/audittool/normalize/GenericJsonWalker.java), object ve array yapılarını recursive olarak gezer. Her node için şu bilgileri taşıyan bir `RawField` oluşturur:
 
-```mermaid
-flowchart TD
-    R[AnalyzeRequest] --> CE[CommentExtractor]
-    CE --> CC[CommentContext]
-    CE --> EX[Yorum path'leri]
+- Tam path.
+- Parent path.
+- Key veya array index.
+- Orijinal `JsonNode` değeri.
+- Algılanan temel tip.
+- Derinlik.
 
-    R --> JW[GenericJsonWalker]
-    JW --> RF[RawField listesi]
-    RF --> FC[FieldClassifier]
-    EX --> FC
-    FC --> AF[Active fields]
-    FC --> EF[Empty fields]
-    FC --> ST[Statistics]
+Walker iş anlamı çıkarmaya çalışmaz. Alanın boş, gürültü veya önemli olduğuna `FieldClassifier` karar verir.
 
-    R --> MM[MetadataMapper]
-    AF --> MM
-    EF --> MM
-    MM --> EAF[Metadata ile zenginleştirilmiş alanlar]
+### FieldClassifier
 
-    R --> CM[ChecklistMapper]
-    R --> SI[SourceInfoExtractor]
+[`FieldClassifier`](../../core/src/main/java/com/yusuf/audittool/normalize/FieldClassifier.java) şu sınıflandırmayı yapar:
 
-    CC --> AC[AgentContext]
-    EAF --> AC
-    ST --> AC
-    CM --> AC
-    SI --> AC
-```
+| Durum | Sonuç |
+| --- | --- |
+| `null` | Prompta eklenmez, istatistikte sayılır |
+| `""` veya whitespace | `EMPTY_STRING` |
+| `[]` | `EMPTY_ARRAY` |
+| `{}` | `EMPTY_OBJECT` |
+| Scalar değer | Aktif alan |
+| `{name/value/key/displayName: ...}` gibi basit object | Tek anlamlı aktif değer olarak collapse edilir |
+| Tek başına URL değeri | Gürültü olarak atlanır |
+| `expand`, `operations`, `schema` key'leri | Gürültü olarak atlanır |
 
-### 5.1 GenericJsonWalker çıktısı
+Object collapse sırasında `id`, `self`, `iconUrl`, `avatarId` ve `avatarUrls` gibi teknik ayrıntılar tekrar ayrı alan olarak eklenmez. Bilinmeyen diğer leaf alanlar generic walker akışında korunur; sabit key listesinde olmadığı için otomatik olarak kaybolmaz.
 
-Walker her anlamlı düğüm için bir `RawField` oluşturur. Bu model şunları taşır:
+[`ChangeItemSummarizer`](../../core/src/main/java/com/yusuf/audittool/normalize/ChangeItemSummarizer.java), changelog item benzeri object'lerde field/from/to ilişkisini tek bir `change.compact` değerine dönüştürür. Bu davranış key adlarının küçük/büyük harf ve yaygın eş anlamlı varyasyonlarını destekler; belirli bir custom field ID'sine bağlı değildir.
 
-- `path`: `fields.status.name` gibi tam yol.
-- `parentPath`: üst düğümün yolu.
-- `key`: alanın kendi anahtarı.
-- `value`: ham `JsonNode` değeri.
-- `detectedType`: string, array, object gibi gözlenen tür.
-- `depth`: JSON içindeki derinlik.
+### Metadata ve Alan Açıklamaları
 
-Walker henüz alanın önemli, boş veya gereksiz olduğuna karar vermez.
+[`MetadataMapper`](../../core/src/main/java/com/yusuf/audittool/metadata/MetadataMapper.java) farklı metadata şekillerinden ortak bir registry üretir. Desteklenen ana biçimler şunlardır:
 
-### 5.2 FieldClassifier kararı
+- `values: [...]` içeren Jira field metadata cevabı.
+- Doğrudan metadata array'i.
+- `fields: { fieldId: {...} }` map'i.
+- Project ve issue type içinde nested metadata.
+- Tek field metadata object'i.
 
-Classifier alanları şu şekilde ayırır:
+Field kimliği için `id`, `key`, `fieldId` ve map key'i; alias için metadata adı ve `clauseNames` kullanılır. Eşleştirme teknik key, path parçaları ve label adayları üzerinden yapılır.
 
-- Dolu ve anlamlı alanlar -> `NormalizedField`
-- Boş string, array veya object -> `EmptyField`
-- Null alanlar -> prompttan çıkarılır, yalnızca sayılır
-- URL, avatar ve teknik noise alanları -> prompttan çıkarılır, yalnızca sayılır
-- Yorum path'leri -> ayrı `CommentContext` üretildiği için field listesinden çıkarılır
+Metadata'dan taşınan bilgiler:
 
-Bu sayede iki bine yakın null custom field içeren bir Jira kaydı modele iki bin satır olarak gönderilmez.
+- ID ve görünen ad.
+- Schema type, system, items, custom type ve custom ID.
+- Açıklama.
+- `required` ve `hasDefaultValue`.
+- Allowed value ID, label ve açıklamaları.
 
-## 6. Field Description Tam Olarak Nereye Gidiyor?
-
-`fieldDescriptions`, metadata'nın alternatifi değil, metadata kaydını tamamlayan opsiyonel bir açıklama sözlüğüdür.
-
-Örnek girdi:
+`fieldDescriptions` şu basit biçimde verilebilir:
 
 ```json
 {
-  "fieldDescriptions": {
-    "customfield_21014": "Gereksinimin ölçülebilir kabul kriterlerini içerir."
-  }
+  "customfield_20105": "Değişikliğin teknik, takvimsel, mali ve güvenlik etkisi."
 }
 ```
 
-Veri akışı şöyledir:
+Bu açıklama eşleşen `FieldMetadata.descriptionTr` alanına yazılır. Aynı field için metadata adı ve şeması korunur; açıklama promptta `Description` satırı olarak görünür. Bir açıklama alanın ne anlama geldiğini söyler, ancak tek başına o alanın zorunlu olduğunu kanıtlamaz.
 
-```mermaid
-flowchart LR
-    FD[fieldDescriptions JSON] --> AR[AnalyzeRequest]
-    AR --> NS[NormalizeService]
-    NS --> MM[MetadataMapper]
-    MJ[metadata JSON] --> MM
-    MM --> FM[FieldMetadata.descriptionTr]
-    FM --> NF[NormalizedField veya EmptyField]
-    NF --> CR[AgentContextRenderer]
-    CR --> PR[Prompt içindeki Description satırı]
-    PR --> LLM[Model değerlendirmesi]
-```
+### Comment İşleme
 
-`MetadataMapper` önce metadata registry'sini oluşturur. Ardından `fieldDescriptions` içindeki anahtarları aynı registry'ye ekler veya mevcut metadata kaydını günceller. Örneğin metadata alanın adını ve türünü, `fieldDescriptions` ise kurum içindeki iş anlamını sağlayabilir:
+[`CommentExtractor`](../../core/src/main/java/com/yusuf/audittool/normalize/CommentExtractor.java), yorumları normal field'lardan ayrı tutar. Kaynak adayları şu sırada aranır:
+
+1. `fields.comment.comments`
+2. `comment.comments`
+3. `fields.comments`
+4. `comments`
+
+String body ve Jira Cloud benzeri rich-text body yapıları desteklenir. Kullanılabilir bilgiler `AuditComment` içinde body, author, created, updated, restricted visibility ve source path olarak tutulur.
+
+Comment container generic field listesinden çıkarılır. Böylece body, author ve pagination değerleri hem comment hem normal alan olarak iki kez prompta girmez.
+
+Coverage değerleri:
+
+| Değer | Anlam |
+| --- | --- |
+| `FULL` | `startAt=0` ve total dönen comment sayısıyla uyumlu |
+| `PARTIAL` | Sayfalama daha fazla comment olduğunu gösteriyor |
+| `UNKNOWN` | Tamlık için yeterli veya tutarlı pagination bilgisi yok |
+
+Comment tasarımının gerekçesi ve fallback ayrıntıları [Comment Context Tasarımı](comment_context_design.md) belgesindedir.
+
+### Checklist İşleme
+
+[`ChecklistMapper`](../../core/src/main/java/com/yusuf/audittool/checklist/ChecklistMapper.java) şu girdileri destekler:
+
+- String checklist.
+- String array.
+- `text`, `title`, `name` veya `description` içeren object array.
+- Bilinmeyen object biçimi için raw JSON bağlamı.
+
+Checklist yokluğu otomatik bulgu değildir. Model, yalnızca kayıtla ilişkisi ve sağlanan kanıt yeterliyse checklist maddesini ihlal olarak raporlamalıdır.
+
+## AgentContext
+
+[`AgentContext`](../../core/src/main/java/com/yusuf/audittool/model/AgentContext.java), modelden bağımsız ortak iç modeldir:
 
 ```text
-- Acceptance Criteria
-  Path: fields.customfield_21014
-  Empty Type: EMPTY_STRING
-  Metadata ID: customfield_21014
-  Schema Type: string
-  Description: Gereksinimin ölçülebilir kabul kriterlerini içerir.
+AgentContext
+|- SourceInfo
+|- activeFields: NormalizedField[]
+|- emptyFields: EmptyField[]
+|- CommentContext
+|- ChecklistContext
+`- ContextStatistics
 ```
 
-Bu açıklama `AnalyzeResponse` içinde ayrı bir üst seviye alan olarak dönmez. Çünkü açıklama bir denetim sonucu değil, modelin alanı doğru yorumlaması için kullanılan bağlamdır. Açıklamanın sisteme girip girmediğini görmek için `/demo/api/normalize` endpointi kullanılabilir; ilgili `NormalizedField` veya `EmptyField` içindeki `metadata.descriptionTr` alanında görünür.
+`ContextStatistics`; aktif, boş, null, atlanan gürültü, metadata eşleşen ve metadata eşleşmeyen alan sayılarını tutar. Bu sayılar debug ve normalizasyon görünürlüğü içindir; tek başına audit bulgusu değildir.
 
-### 6.1 Arayüzden yükleme
+## Prompt Üretimi
 
-Web arayüzündeki `Türkçe Alan Açıklamaları` alanı, field kimliğini açıklama metniyle eşleştiren bir JSON dosyası kabul eder. Ayrı dosya seçilmezse tam `AnalyzeRequest` içindeki `fieldDescriptions` veya metadata içindeki `descriptionTr` / `description` değerleri kullanılmaya devam eder.
-
-## 7. Metadata Eşleştirme Mantığı
-
-Metadata eşleştirmesi model tarafından değil Java kodu tarafından yapılır. Registry içinde field kimliği, adı ve Jira alias bilgileri tutulur.
-
-Bir payload alanı için yaklaşık eşleştirme sırası:
-
-1. Field key
-2. Path içindeki parent field kimliği
-3. Path'in son parçası
-4. Field label veya metadata adı
-
-Eşleşme bulunamazsa alan silinmez. `metadata.provided=false` olarak AgentContext içinde kalır.
-
-`FieldMetadata` şu bilgileri taşıyabilir:
-
-- Field kimliği ve adı
-- Schema type, system ve items bilgileri
-- Custom type ve custom ID
-- Açıklama
-- Zorunlu olma bilgisi
-- Varsayılan değer bilgisi
-- İzin verilen değerler
-
-URL, avatar ve teknik gösterim alanları metadata'nın iş anlamı olmadığı için modele taşınmaz.
-
-## 8. Yorum Akışı
-
-Yorumlar sıradan active field olarak bırakılmaz. `CommentExtractor`, Jira'nın yaygın comment wrapper yapılarını ve doğrudan comment array biçimlerini tanımaya çalışır.
-
-`CommentContext` şunları taşır:
-
-- Yorum listesi
-- Her yorumun yazarı, oluşturulma ve güncellenme zamanı
-- Kaynak path
-- Wrapper içindeki pagination bilgileri
-- Yorumların tamamının alınıp alınmadığını gösteren coverage bilgisi
-
-Yorum path'leri daha sonra `FieldClassifier` tarafından tekrar active field olarak üretilmez. Böylece aynı yorum promptta iki kez görünmez.
-
-## 9. Prompt Oluşturma
-
-`AgentContextRenderer`, context içeriğini sabit bölümlere ayırır:
+[`AgentContextRenderer`](../../core/src/main/java/com/yusuf/audittool/prompt/AgentContextRenderer.java), `AgentContext` değerini şu sabit bölümlere dönüştürür:
 
 ```text
 ENTITY
@@ -323,267 +296,150 @@ ACTIVE FIELDS
 EMPTY FIELDS
 COMMENTS
 CHECKLIST
-STATISTICS
 ```
 
-`PromptBuilder`, bu metni `core_auditor.md` içindeki `{{CONTEXT}}` alanına yerleştirir. Context sınırları model açısından veri ile talimatı ayırır. Payload içinde "önceki talimatları görmezden gel" gibi bir metin bulunması hâlinde bunun sistem talimatı değil denetlenecek veri olduğu promptta açıkça belirtilir.
+Aktif ve boş alanlarda metadata eşleşmişse görünen ad, ID, schema, required bilgisi, açıklama ve allowed values birlikte render edilir. Evidence alanları orijinal dilini korur.
 
-## 10. Model Seçimi ve Thinking
+[`PromptBuilder`](../../core/src/main/java/com/yusuf/audittool/prompt/PromptBuilder.java) üç kaynağı birleştirir:
 
-Arayüz `/demo/api/models` çağrısıyla kurulu modelleri alır. Model katalog cevabı şunları içerir:
+| Kaynak | Rol |
+| --- | --- |
+| `core_auditor.md` | Ortak audit rolü, kanıt kuralları, belirsizlik ve güvenlik sınırları |
+| `output_markdown.md` | Core kütüphane için okunabilir başlıklı metin sözleşmesi |
+| Render edilmiş `AgentContext` | Denetlenecek güvenilmeyen veri |
 
-- Model adı
-- Dosya boyutu
-- Parametre boyutu
-- Quantization seviyesi
-- Ollama capabilities listesi
-- Thinking desteği
-- Varsayılan model olup olmadığı
+`AuditEngine`, Markdown çıktı profilini açıkça seçer. Spring tarafından oluşturulan demo `PromptBuilder` ise varsayılan `output_json.md` profilini kullanır. Böylece ortak audit mantığı tek dosyada kalırken çıktı sözleşmesi kullanım alanına göre ayrılır.
 
-`AgentOptions` verilirse model ve thinking ayarı yalnızca mevcut analiz için geçerli olur. Uygulamanın global ayar dosyası değiştirilmez.
+Dinamik veri `BEGIN_AUDIT_CONTEXT` ve `END_AUDIT_CONTEXT` sınırları içine yerleştirilir. Payload veya comment içinde bulunan “ignore previous instructions” benzeri metinler komut değil, denetlenecek veri kabul edilir.
 
-Thinking açıkken Ollama JSON Schema zorlaması kullanılmaz. Bazı modeller final cevabı `thinking` alanına yönlendirebildiği için bu iki özellik birlikte güvenilir çalışmamıştır. Thinking kapalıyken runtime schema gönderilir.
+## Çıktı Sözleşmeleri
 
-## 11. Mevcut Rapor Sözleşmesi
+### Core Kütüphane
 
-Mevcut sistem modelden şu ana yapıyı ister:
-
-```text
-AuditReport
-|- summary
-|- findings[]
-|  |- title
-|  |- category
-|  |- severity
-|  |- evidence[]
-|  |- rationale
-|  `- recommendedAction
-|- observations[]
-|  |- type
-|  |- description
-|  `- evidence[]
-`- recommendation
-```
-
-Thinking kapalıyken aynı yapı Ollama'ya JSON Schema olarak da gönderilir. Buna rağmen küçük modeller şu sorunları yaşayabilir:
-
-- Cevabı tamamlamadan token sınırına ulaşma
-- Tekrara girme
-- Zorunlu bir string alanını boş bırakma
-- Alan adını eş anlamlı başka bir adla yazma
-- Thinking modunda JSON dışında açıklama üretme
-
-JSON Schema söz dizimini iyileştirir, fakat modelin cevabı bitirmesini veya semantik olarak doğru karar vermesini garanti etmez.
-
-## 12. Çıktı Formatı İçin Önerilen Yaklaşım
-
-Bu proje için en sağlam MVP yaklaşımı iki ayrı çıktı modu sunmaktır. Tek model çağrısında hem Markdown hem JSON istenmez. Kullanıcı veya uygulama, analiz başlamadan önce hangi sözleşmenin kullanılacağını seçer.
-
-```text
-TEXT modu       -> Başlıklı metin istenir -> Her durumda doğrudan gösterilir
-STRUCTURED modu -> JSON istenir           -> Geçerliyse kart, bozuksa ham çıktı gösterilir
-```
-
-Normal web kullanımı için `TEXT`, otomasyon ve deneyler için `STRUCTURED` tercih edilir. Her iki mod da tek Ollama çağrısı yapar.
-
-### 12.1 TEXT modu
-
-Modelden sabit Markdown başlıkları istenir:
+Core varsayılan olarak şu Markdown başlıklarını ister:
 
 ```markdown
-# Özet
-
-# Bulgular
-
-# Gözlemler ve Yetersiz Bağlam
-
-# Son Öneri
+## Özet
+## Bulgular
+## Gözlemler ve Yetersiz Bağlam
+## Önerilen Aksiyonlar
 ```
 
-Bu çıktı parse edilmek zorunda değildir. Arayüz metni güvenli biçimde gösterir. Model bir başlığı eksik yazsa bile rapor tamamen kaybolmaz. Başlıklar yalnızca okunabilirliği artıran bir format talimatıdır; sistemin çalışması başlıkların bire bir yazılmasına bağlı değildir.
+Model bir başlığı farklı yazsa bile `AuditEngine` cevabı kaybetmez; boş olmadığı sürece final metni çağırana döndürür. Bu, küçük modellerin ufak JSON veya schema hataları yüzünden tüm raporun kullanılamaz hale gelmesini önler.
 
-### 12.2 STRUCTURED modu
+### Yerel Demo
 
-Bu mod mevcut JSON Schema ve kart görünümünü kullanır. Model geçerli JSON üretirse bulgu kartları oluşturulur. JSON üretmezse sistem hata sayfasına düşmek yerine modelin ham çıktısını metin olarak gösterir.
+Demo web akışı `output_json.md`, Ollama JSON Schema, `AuditReportParser` ve `AuditReportValidator` kullanır. Geçerli yapı üretildiğinde rapor kartları gösterilir; ham model çıktısı ayrıca korunur.
 
-Önerilen response yaklaşımı:
+Bu structured sözleşme demo özelliğidir. Kurum entegrasyonu ister Markdown metni doğrudan kullanabilir, ister kendi response sözleşmesini ayrıca uygulayabilir.
 
-```json
-{
-  "agentOutput": "Modelin her durumda saklanan raporu",
-  "outputFormat": "text",
-  "report": null,
-  "structuredOutput": false,
-  "reportValidationErrors": []
-}
-```
-
-Bu tasarımda `structuredOutput=false`, model çağrısının başarısız olduğu anlamına gelmez. Yalnızca kartlara dönüştürülebilen makine-okunur raporun oluşmadığını ifade eder.
-
-### 12.3 Somut örnek
-
-Aynı issue iki farklı biçimde çalıştırılabilir:
-
-```text
-Kullanıcı TEXT seçti
--> Prompt sabit rapor başlıklarını ister
--> Model Türkçe veya İngilizce rapor döndürür
--> UI cevabı doğrudan gösterir
-
-Kullanıcı STRUCTURED seçti
--> Prompt ve Ollama JSON Schema ister
--> Geçerli JSON gelirse UI kartları gösterir
--> Geçersiz JSON gelirse UI ham model metnini gösterir
-```
-
-Bu yaklaşımda ikinci bir çeviri veya JSON tamir modeli çağrılmaz.
-
-### 12.4 Neden yalnızca JSON'a güvenmemeliyiz?
-
-JSON zorunluluğu şu faydaları sağlar:
-
-- Rapor kartlarını kolay oluşturma
-- Severity filtreleme
-- Sonuçları otomatik karşılaştırma
-- İleride veritabanına kaydetme
-
-Ancak kullanıcıya rapor göstermek için JSON zorunlu değildir. Model davranışının değişken olduğu yerel ve küçük model ortamında, raporun hiç gösterilmemesi geçersiz bir JSON'dan daha büyük problemdir.
-
-### 12.5 Değerlendirilen alternatifler
-
-| Yaklaşım | Avantaj | Dezavantaj |
-| --- | --- | --- |
-| Katı JSON | Otomasyona uygundur | Truncation veya tek alan hatasında tüm yapı geçersiz olur |
-| Sürekli parser fallback eklemek | Bazı model varyasyonlarını kurtarır | Sonsuz sayıda varyasyon vardır ve bakım maliyeti büyür |
-| İkinci modele JSON tamir ettirmek | Bazı çıktıları düzeltebilir | Gecikme, kaynak tüketimi ve yeni hata ihtimali oluşturur |
-| Yalnızca Markdown | En dayanıklı kullanıcı çıktısıdır | Kart, severity filtresi ve otomasyon zorlaşır |
-| Seçilebilir TEXT / STRUCTURED modu | Kullanıcı raporu kaybolmaz ve otomasyon imkânı korunur | UI iki çalışma modunu desteklemelidir |
-
-Önerilen seçenek son satırdaki hibrit yaklaşımdır.
-
-### 12.6 Uygulama adımları
-
-Bu değişiklik yapılacaksa güvenli sıra şöyledir:
-
-1. `AgentOptions` içine `outputMode` seçeneği eklemek.
-2. TEXT modu için sabit başlıklı prompt sözleşmesi oluşturmak.
-3. Arayüzde `agentOutput` için güvenli metin görünümü eklemek.
-4. STRUCTURED modunda mevcut JSON Schema ve kart görünümünü korumak.
-5. "Rapor yapısı doğrulanamadı" ifadesini "Metin raporu oluşturuldu; kart görünümü üretilemedi" şeklinde değiştirmek.
-6. Evaluation sonuçlarını output moduna göre ayrı değerlendirmek.
-
-## 13. Güncel Sınıf İlişkileri
+## Demo Mimarisi
 
 ```mermaid
-classDiagram
-    class AnalyzeController
-    class AgentModelController
-    class AuditService
-    class NormalizeService
-    class PromptBuilder
-    class AgentContextRenderer
-    class AgentClient
-    class OllamaAgentClient
-    class OllamaModelCatalog
-    class AuditReportParser
-    class AuditReportValidator
-    class AnalyzeRequest
-    class AgentOptions
-    class AgentContext
-    class NormalizedField
-    class EmptyField
-    class FieldMetadata
-    class CommentContext
-    class ChecklistContext
-    class AnalyzeResponse
-    class AuditReport
-
-    AnalyzeController --> AuditService
-    AgentModelController --> OllamaModelCatalog
-    AuditService --> NormalizeService
-    AuditService --> PromptBuilder
-    AuditService --> AgentClient
-    AuditService --> AuditReportParser
-    AuditService --> AuditReportValidator
-    AgentClient <|.. OllamaAgentClient
-    PromptBuilder --> AgentContextRenderer
-
-    AnalyzeRequest o-- AgentOptions
-    NormalizeService --> AgentContext
-    AgentContext *-- NormalizedField
-    AgentContext *-- EmptyField
-    AgentContext *-- CommentContext
-    AgentContext *-- ChecklistContext
-    NormalizedField o-- FieldMetadata
-    EmptyField o-- FieldMetadata
-    AnalyzeResponse o-- AuditReport
+flowchart LR
+    UI[Web arayüzü] --> Controller[Demo controllerları]
+    Controller --> Service[Demo AuditService]
+    Service --> Normalize[Core NormalizeService]
+    Service --> Prompt[Core PromptBuilder]
+    Service --> Client[OllamaAgentClient]
+    Client --> Ollama[Ollama API]
+    Ollama --> Parser[Parser + Validator]
+    Parser --> UI
 ```
 
-Bu diyagram, ilk plandaki sınıf yapısına göre şu önemli eklemeleri içerir:
+Demo modülündeki iki Ollama adapterinin amaçları farklıdır:
 
-- Comment extraction ve comment context
-- Model kataloğu ve istek bazlı model seçimi
-- Thinking seçeneği
-- Audit report modelleri
-- Parser ve validator
-- Structured ve ham çıktıyı birlikte taşıyan response
+| Sınıf | Amaç |
+| --- | --- |
+| `OllamaAgentClient` | Web demosunun structured JSON rapor ve model seçimi akışı |
+| `OllamaAgentTransport` | Core `AuditEngine` akışını gerçek Ollama HTTP endpointiyle smoke test etmek |
 
-## 14. Demo Endpointleri
+Demo endpointleri:
 
 | Endpoint | Amaç | Model çağrısı |
 | --- | --- | --- |
-| `GET /demo/api/health` | Spring Boot demosunun çalıştığını gösterir | Hayır |
-| `GET /demo/api/models` | Kurulu Ollama modellerini listeler | Üretim yapmaz |
-| `POST /demo/api/normalize` | AgentContext üretir ve debug amacıyla döndürür | Hayır |
-| `POST /demo/api/analyze` | Demo normalizasyonu, prompt ve Ollama akışını çalıştırır | Evet |
+| `GET /demo/api/health` | Uygulama sağlık kontrolü | Hayır |
+| `GET /demo/api/models` | Kurulu modelleri listeler | Hayır |
+| `POST /demo/api/normalize` | `AgentContext` sonucunu gösterir | Hayır |
+| `POST /demo/api/analyze` | Structured demo analizini çalıştırır | Evet |
 
-## 15. Hata Sınırları
+Demo kullanımı ve önerilen senaryolar için [Demo Akışı](../evaluation/demo_walkthrough.md) belgesine bakın.
 
-Sistemde üç farklı hata türünü ayırmak gerekir:
+## Güvenlik ve Veri Sınırları
 
-1. **Girdi hatası:** Payload yoktur veya JSON okunamaz.
-2. **Runtime hatası:** Ollama kapalıdır ya da seçilen model kurulu değildir.
-3. **Model çıktı problemi:** Model cevap vermiştir fakat cevap structured sözleşmeye uymamıştır.
+- Payload, metadata, açıklama, checklist ve comment içeriği güvenilmeyen veridir.
+- Dinamik context içindeki talimat benzeri metinler uygulanmaz.
+- URL, avatar ve benzeri teknik gürültüler mümkün olduğunca prompttan çıkarılır.
+- Core endpoint tokenlarını üretmez veya saklamaz; header'ları çağırandan alır.
+- Prompt ve hassas payload içerikleri uygulama loglarına yazılmamalıdır.
+- Comment içindeki linkler takip edilmez; model yalnızca verilen metni görür.
+- Model reasoning/chain-of-thought içeriği kullanıcıya rapor olarak sunulmaz.
 
-Üçüncü durum sistem bağlantı hatası değildir. Modelin metni kullanıcıya gösterilebilir ve gösterilmelidir.
+## Hata Sınırları
 
-## 16. Test Stratejisi
+| Katman | Hata örneği | Sorumlu taraf |
+| --- | --- | --- |
+| Girdi | Payload yok veya JSON parse edilemedi | Entegrasyon uygulaması / `NormalizeService` |
+| Endpoint | Göreli veya HTTP dışı URI | `AgentEndpoint` |
+| Transport | Timeout, TLS, authentication veya HTTP hata kodu | Kuruma özel `AgentTransport` |
+| Model | Boş response | `AuditEngine` tarafından reddedilir |
+| Model biçimi | Başlık veya JSON sözleşmesine uymama | Core metni döndürür; demo parser sonucu ayrıca işaretler |
+| Model anlamı | Yanlış finding veya false positive | Evaluation ve insan denetimi |
 
-Java testleri modelden bağımsız davranışları kontrol eder:
+## Test Stratejisi
 
-- JSON traversal
-- Field classification
-- Metadata ve açıklama eşleştirmesi
-- Checklist mapping
-- Comment extraction
-- Prompt rendering
-- Ollama request gövdesi
-- Parser ve validator
-- Controller sözleşmesi
+Core unit testleri şu deterministic davranışları kapsar:
 
-LLM'in doğru finding üretip üretmediği normal unit test ile garanti edilemez. Bunun için `evaluation/scenarios/` altındaki fixture ve expected dosyaları kullanılır. Aynı senaryo farklı modellerle çalıştırılır ve sonuç semantik olarak karşılaştırılır.
+- Recursive JSON traversal.
+- Null, empty, active ve noise sınıflandırması.
+- Metadata ve field description eşleştirmesi.
+- Checklist fallbackleri.
+- Comment body ve coverage extraction.
+- Context rendering ve prompt profili.
+- Public `AuditEngine` sözleşmesi.
 
-## 17. Güncel Mimari Kararlar
+Demo testleri şunları kapsar:
 
-- Normalizasyon kodla ve deterministic yapılır.
+- Ollama request body ve response okuma.
+- Model kataloğu ve thinking ayarı.
+- Structured rapor parse/validation.
+- Controller ve web request sözleşmesi.
+- Mock HTTP üzerinden `AuditEngine -> AgentTransport` akışı.
+
+Gerçek model davranışı unit test kabul edilmez. Senaryo fixture'ları ve model karşılaştırmaları [Değerlendirme Belgeleri](../evaluation/README.md) altında yönetilir. Gerçek Ollama smoke testi yalnızca `RUN_OLLAMA_INTEGRATION=true` ile açılır.
+
+## Güncel Mimari Kararlar
+
+- Ana teslimat `core` kütüphanesidir; demo ayrı modüldür.
+- Dış sistemler `AuditEngine` üzerinden tek çağrı yapar.
+- JSON dosya yolu değil, parse edilmiş `JsonNode` olarak verilir.
+- Kurum mesaj sözleşmesi `AgentTransport` arkasında kalır.
+- Normalizasyon deterministic Java koduyla yapılır.
+- Null alanlar prompta gönderilmez; boş alanlar türüyle korunur.
 - Metadata eşleştirmesi modele bırakılmaz.
-- Null alanlar prompta gönderilmez.
-- Boş alanlar potansiyel denetim bağlamı olarak korunur.
-- Yorumlar ayrı context olarak modellenir.
-- Checklist bir rule engine değil, model bağlamıdır.
-- Model seçimi analiz bazında değiştirilebilir.
-- Ham model çıktısı hiçbir durumda kaybedilmez.
-- Structured çıktı, model doğruluğunun garantisi değildir.
-- Nihai denetim kararı kullanıcıya aittir.
+- Field description, metadata açıklamasını zenginleştirir; zorunluluk kanıtı değildir.
+- Comment'ler ilişki ve zaman bilgisini koruyan ayrı context'tir.
+- Core model cevabını ham metin olarak döndürür.
+- Structured JSON rapor, yerel demonun opsiyonel görünümüdür.
+- Model sonucu karar desteğidir; nihai karar kullanıcıya aittir.
 
-## 18. Sonraki Mimari Çalışmalar
+## Değişiklik Etkisi Rehberi
 
-Önerilen sonraki sıra:
+| Değişiklik | Öncelikle etkilenen yer |
+| --- | --- |
+| Yeni girdi alanı | `AuditInput`, `NormalizeService`, entegrasyon rehberi |
+| Yeni metadata biçimi | `MetadataMapper` ve metadata testleri |
+| Yeni comment biçimi | `CommentExtractor`, `CommentTextExtractor`, comment tasarım belgesi |
+| Yeni prompt kuralı | `core_auditor.md`, prompt testleri, evaluation senaryoları |
+| Yeni çıktı biçimi | Ayrı output profile ve ilgili tüketici |
+| Kurum endpoint sözleşmesi | Yalnızca yeni `AgentTransport` implementasyonu ve testleri |
+| Demo UI değişikliği | `demo` static/web paketleri; core API etkilenmez |
 
-1. Hibrit text/structured çıktı kararını uygulamak.
-2. Field descriptions dosya biçimini gerçek kurum örneğiyle doğrulamak.
-3. Mevcut sequence ve class diyagramlarını kod değiştikçe bu belgede güncellemek.
-4. Evaluation runner ile modelleri aynı senaryolarda otomatik ölçmek.
-5. Gerçek anonimleştirilmiş kurum verisiyle doğrulama yapmak.
+## İlgili Belgeler
 
-İlk planlama belgesi tarihsel kararları anlamak için yararlıdır. Güncel sistem davranışı ve UML kaynağı olarak bu belge esas alınmalıdır.
+- [Dokümantasyon Merkezi](../README.md)
+- [Kütüphane Entegrasyon Rehberi](../integration/kutuphane_entegrasyonu.md)
+- [Kütüphane ve Demo Ayrımı](library_demo_ayrimi.md)
+- [Comment Context Tasarımı](comment_context_design.md)
+- [Değerlendirme Stratejisi](../evaluation/evaluation_strategy.md)
+- [Diyagram Kaynakları](../diagrams/README.md)

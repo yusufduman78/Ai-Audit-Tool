@@ -1,81 +1,140 @@
 # Generic AI Audit Tool
 
-Generic AI Audit Tool, Jira benzeri yapilandirilmis JSON kayitlarini normalize edip bir LLM endpointi icin kanita dayali denetim promptu olusturan Java kutuphanesidir. Projede ayrica Ollama ile calisan bir Spring Boot demosu bulunur.
+Generic AI Audit Tool, Jira benzeri yapılandırılmış kayıtları denetim için hazırlayan bir Java kütüphanesidir. Ham JSON verisini normalize eder, metadata, alan açıklamaları, checklist ve yorumlarla zenginleştirir, kanıta dayalı bir denetim promptu üretir ve bu promptu entegrasyon uygulamasının sağladığı LLM taşıma katmanına verir.
 
-Ilk kullanim alani Jira issue verileridir. Normalize katmani belirli bir issue tipine bagli degildir; nested object, array, custom field, metadata, checklist ve comment bilgilerini ortak bir agent context yapisina donusturur.
+Projenin ana teslimatı `core` modülüdür. `demo` modülü ise aynı yaklaşımın yerel Ollama ve Spring Boot web arayüzüyle nasıl çalıştığını gösterir.
 
-## Neler Yapar?
+> Bu sistem karar desteği üretir. Model çıktısı nihai denetim kararı, sertifikasyon kanıtı veya otomatik uygunluk onayı değildir.
 
-- JSON payload icindeki aktif, bos, null ve noise alanlari ayirir.
-- Custom field metadata bilgisini teknik field ID'leriyle eslestirir.
-- Checklist maddelerini ve Jira comment gecmisini ayri baglam olarak tasir.
-- Entegrasyon uygulamasinin verdigi LLM endpointi icin denetlenebilir bir prompt olusturur.
-- Kurumun mesaj sozlesmesini `AgentTransport` arayuzu arkasinda tutar.
-- Ana kutuphane akisinda model cevabini parse etmeden metin olarak dondurur.
-- Demo akisinda Ollama JSON Schema destegiyle yapilandirilmis audit raporu ister.
-- Kurulu Ollama modellerini arayuzden secmeye ve desteklenen modellerde thinking modunu analiz bazinda acmaya izin verir.
-- Bulgulari, gozlemleri ve son oneriyi web arayuzunde gosterir.
-- Model raporunu parse edip zorunlu alanlar ve severity degerleri bakimindan dogrular.
+## Genel Akış
+
+```text
+Issue JSON + metadata + alan açıklamaları + checklist
+                         |
+                         v
+                    AuditEngine
+                         |
+             normalize -> prompt oluştur
+                         |
+                         v
+                  AgentTransport
+                         |
+                         v
+              Kurum LLM endpointi
+                         |
+                         v
+                 String denetim raporu
+```
+
+Core kütüphane dosya yolu, HTTP request gövdesi, kimlik doğrulama biçimi veya modele özel response alanı varsaymaz. Bu ayrıntılar, entegrasyon uygulamasının yazdığı `AgentTransport` implementasyonunda kalır.
+
+## Temel Özellikler
+
+- İç içe object ve array yapıları bulunan JSON kayıtlarını generic olarak gezer.
+- Aktif, boş, null ve gürültü niteliğindeki alanları birbirinden ayırır.
+- Teknik custom field kimliklerini metadata adı ve açıklamasıyla eşleştirir.
+- Alan açıklamalarını metadata bilgisine ek bağlam olarak işler.
+- Jira benzeri comment yapılarını yazar, zaman ve coverage bilgisiyle ayrı bağlamda tutar.
+- Checklist maddelerini modele verilen denetim kriterleri olarak taşır.
+- Prompt içindeki dinamik veriyi güvenilmeyen audit context olarak sınırlar.
+- Ana kütüphane akışında model cevabını parse etmeden `String` olarak döndürür.
+- Yerel demoda model seçimi, thinking ayarı ve yapılandırılmış rapor görünümü sunar.
+
+## Modüller
+
+| Bölüm | Sorumluluk | Üretim bağımlılığı olarak kullanılır mı? |
+| --- | --- | --- |
+| `core/` | Normalizasyon, prompt üretimi ve public kütüphane API'si | Evet |
+| `demo/` | Spring Boot, Ollama adapterleri ve web arayüzü | Hayır, yalnızca gösterim ve yerel test |
+| `evaluation/` | Senaryolar, beklenen sonuçlar ve demo girdileri | Test ve model değerlendirmesi için |
+| `docs/` | Mimari, entegrasyon ve değerlendirme belgeleri | Başvuru kaynağı |
+
+Modül sınırlarının gerekçesi için [Kütüphane ve Demo Ayrımı](docs/architecture/library_demo_ayrimi.md) belgesine bakın.
 
 ## Gereksinimler
 
 - Java 21
-- Maven 3.9+
-- Yerel demoyu calistirmak icin Ollama 0.31 veya daha yeni bir surum
-- Demo varsayilan modeli icin yaklasik 3 GB bos disk alani
+- Maven 3.9 veya üzeri
+- Yalnızca yerel demo ve gerçek model smoke testi için Ollama
 
-Varsayilan ve mevcut evaluation setinde daha basarili model:
+Demo için önerilen mevcut model:
 
 ```bash
 ollama pull qwen3:4b-instruct
 ```
 
-Ollama masaustu uygulamasi calisiyorsa API genellikle `http://localhost:11434` adresinde zaten aciktir. `ollama serve` komutunda "address already in use" gorulmesi de servisin acik oldugunu gosterebilir.
+Ollama masaüstü uygulaması açıksa API genellikle `http://localhost:11434` adresinde hazırdır. `ollama serve` komutunun “address already in use” hatası vermesi çoğunlukla servisin zaten çalıştığını gösterir.
 
-## Calistirma
+## Hızlı Başlangıç
 
-Proje kok dizininde:
+Tüm Java testlerini çalıştırın:
+
+```bash
+mvn clean test
+```
+
+Demoyu paketleyip başlatın:
 
 ```bash
 mvn clean package -DskipTests
 java -jar demo/target/audittool-demo-0.0.1-SNAPSHOT.jar
 ```
 
-Ardindan demo web arayuzunu ac:
+Ardından tarayıcıdan şu adresi açın:
 
 ```text
 http://localhost:8080/demo/index.html
 ```
 
-Arayuzde issue, metadata, Turkce alan aciklamalari ve checklist JSON dosyalari ayri ayri yuklenebilir. Hazir dort dosyali ornekler `evaluation/demo-inputs/` altindadir. `evaluation/scenarios/fixtures/` altindaki tam `AnalyzeRequest` fixture dosyalari da yalnizca `Issue JSON` alanina yuklenebilir; arayuz bunlarin icindeki metadata, field descriptions ve checklist bilgisini otomatik kullanir.
+Arayüzde issue, metadata, Türkçe alan açıklamaları ve checklist dosyaları ayrı ayrı yüklenebilir. Hazır girdiler `evaluation/demo-inputs/`, tam request fixture'ları ise `evaluation/scenarios/fixtures/` altındadır.
 
-Model listesi Ollama'dan canli olarak alinir. Secim sadece o analiz istegi icin gecerlidir ve `application.properties` dosyasindaki varsayilani degistirmez. Thinking yetenegi Ollama tarafindan bildirilmeyen modellerde arayuz bu secenegi kapali tutar.
+Adım adım demo anlatımı için [Demo Akışı](docs/evaluation/demo_walkthrough.md) belgesini kullanın.
 
-Uygulamayi durdurmak icin uygulamanin calistigi terminalde `Control+C` kullanilir.
+## Kütüphane Olarak Kullanım
 
-## API
-
-Saglik kontrolu:
+Core artifact henüz merkezi bir Maven deposunda yayımlanmıyorsa önce yerel Maven deposuna kurulur:
 
 ```bash
-curl http://localhost:8080/demo/api/health
+mvn -pl core -am clean install
 ```
 
-Kurulu Ollama modellerini ve varsayilan profili gormek:
+Tüketen projeye bağımlılık eklenir:
 
-```bash
-curl http://localhost:8080/demo/api/models
+```xml
+<dependency>
+    <groupId>com.yusuf</groupId>
+    <artifactId>audittool-core</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+</dependency>
 ```
 
-Normalize edilen baglami gormek:
+En küçük kullanım akışı şöyledir:
 
-```bash
-curl -X POST http://localhost:8080/demo/api/normalize \
-  -H "Content-Type: application/json" \
-  --data-binary @evaluation/scenarios/fixtures/aud-002-missing-acceptance-criteria.json
+```java
+AgentTransport transport = (prompt, endpoint) ->
+        companyAiClient.send(prompt, endpoint.getUri(), endpoint.getHeaders());
+
+AuditEngine engine = new AuditEngine(transport);
+AuditInput input = new AuditInput(issue, metadata, fieldDescriptions, checklist);
+AgentEndpoint endpoint = AgentEndpoint.of("https://ai.example.internal/message");
+
+String report = engine.analyze(input, endpoint);
 ```
 
-LLM analizini calistirmak:
+Buradaki `issue`, `metadata`, `fieldDescriptions` ve `checklist` değerleri Jackson `JsonNode` nesneleridir; dosya yolu değildir. Dosyadan okuma veya HTTP request gövdesini parse etme işi kütüphaneyi kullanan uygulamaya aittir.
+
+Gerçek projede tek metotlu bir facade, transport implementasyonu, header yönetimi, hata sınırları ve test örneği için [Kütüphane Entegrasyon Rehberi](docs/integration/kutuphane_entegrasyonu.md) belgesine bakın.
+
+## Demo API
+
+| İstek | Amaç | LLM çağrısı |
+| --- | --- | --- |
+| `GET /demo/api/health` | Demo uygulamasının ayakta olduğunu doğrular | Hayır |
+| `GET /demo/api/models` | Kurulu Ollama modellerini listeler | Hayır |
+| `POST /demo/api/normalize` | Üretilen `AgentContext` yapısını gösterir | Hayır |
+| `POST /demo/api/analyze` | Normalizasyon, prompt ve model akışını çalıştırır | Evet |
+
+Örnek analiz isteği:
 
 ```bash
 curl -X POST http://localhost:8080/demo/api/analyze \
@@ -83,107 +142,92 @@ curl -X POST http://localhost:8080/demo/api/analyze \
   --data-binary @evaluation/scenarios/fixtures/aud-002-missing-acceptance-criteria.json
 ```
 
-Temel request sozlesmesi:
+Demo request sözleşmesinde `payload` zorunlu; `metadata`, `fieldDescriptions`, `checklist` ve `agentOptions` opsiyoneldir. Bu HTTP sözleşmesi demo modülüne aittir ve core kütüphane API'siyle karıştırılmamalıdır.
 
-```json
-{
-  "payload": { "key": "REQ-001", "fields": {} },
-  "metadata": {},
-  "checklist": [],
-  "agentOptions": {
-    "model": "qwen3:4b-instruct",
-    "thinkingEnabled": false
-  }
-}
-```
+## Demo Yapılandırması
 
-`payload` zorunludur. `metadata`, `checklist` ve `agentOptions` opsiyoneldir. `agentOptions` verilmezse uygulama konfigurasyonundaki varsayilan model ve thinking ayari kullanilir.
-
-## Konfigurasyon
-
-Yerel demo ayarlari `demo/src/main/resources/demo/application-demo.properties` icindedir:
-
-```properties
-server.port=8080
-ollama.url=http://localhost:11434
-ollama.model=qwen3:4b-instruct
-ollama.context-window=8192
-ollama.max-output-tokens=1200
-ollama.temperature=0.2
-ollama.seed=42
-ollama.thinking-enabled=false
-ollama.top-p=0.8
-ollama.top-k=20
-```
-
-Ayarlar environment variable ile override edilebilir. Ornekler `.env.example` dosyasinda bulunur. Spring Boot `.env` dosyasini kendiliginden yuklemez; degerler terminalden export edilmeli veya IDE run configuration icine eklenmelidir.
+Varsayılan ayarlar `demo/src/main/resources/demo/application-demo.properties` dosyasındadır. Başlıca environment variable değerleri şunlardır:
 
 ```bash
-export OLLAMA_MODEL=qwen3.5:9b
+export OLLAMA_MODEL=qwen3:4b-instruct
 export OLLAMA_THINKING_ENABLED=false
-mvn clean package -DskipTests
-java -jar demo/target/audittool-demo-0.0.1-SNAPSHOT.jar
+export OLLAMA_CONTEXT_WINDOW=8192
+export OLLAMA_MAX_OUTPUT_TOKENS=1200
 ```
 
-Sabit `seed` ve dusuk `temperature`, ayni model ve prompt ile tekrar calistirmalarda sonucu daha tutarli hale getirir. Bu ayarlar semantik dogrulugu garanti etmez.
+Spring Boot `.env` dosyasını kendiliğinden yüklemez. Değerleri terminalden export edin veya IDE run configuration içine ekleyin. Tüm örnekler [.env.example](.env.example) dosyasında bulunur.
 
-### Model ve Thinking Secimi
+Thinking desteği modelden modele değişir ve daha küçük modelin daha hızlı sonuç vereceğini garanti etmez. Mevcut karşılaştırmalar [Güncel Model Sonuçları](docs/evaluation/current_results.md) belgesinde tutulur.
 
-Web arayuzu `/demo/api/models` uzerinden makinede kurulu modelleri listeler. `qwen3:4b-instruct` mevcut evaluation setinde finding kapsami daha iyi oldugu icin varsayilandir. `phi4-mini-reasoning:latest` secilebilir durumda tutulur; Ingilizce veya Turkce cikti uretebilir ancak testlerde bazi acik ihlalleri observation olarak siniflandirmistir.
+## Testler
 
-Bu asamada raporu Turkceye cevirmek icin ikinci bir model cagrisi yapilmaz. Ikinci cagri gecikmeyi ve anlamsal kayip riskini artirir. Modelin urettigi dil oldugu gibi gosterilir.
-
-### Qwen3.5 Thinking Modu
-
-`qwen3.5:4b` ve `qwen3.5:9b` ayni model checkpointi icinde thinking ve non-thinking modlarini destekler. Uygulamada mod environment variable ile secilebilir:
-
-```bash
-export OLLAMA_MODEL=qwen3.5:4b
-export OLLAMA_THINKING_ENABLED=true
-export OLLAMA_CONTEXT_WINDOW=16384
-export OLLAMA_MAX_OUTPUT_TOKENS=8000
-mvn clean package -DskipTests
-java -jar demo/target/audittool-demo-0.0.1-SNAPSHOT.jar
-```
-
-Ollama, Qwen3.5 thinking ile runtime JSON Schema birlikte kullanildiginda final JSON'u gizli thinking alanina yazabildigi icin uygulama thinking modunda runtime schema kisitini gondermez. Final response yine `AuditReportParser` ve `AuditReportValidator` tarafindan kontrol edilir; reasoning metni API cevabina veya arayuze tasinmaz.
-
-Yerel testte `qwen3.5:4b` thinking profili tek bir audit kaydinda 420 saniye icinde final rapora ulasamadi. Bu nedenle thinking modu desteklenir ancak varsayilan demo profili degildir.
-
-## Test
+Standart test paketi dış servise ihtiyaç duymaz:
 
 ```bash
 mvn clean test
 ```
 
-Java testleri normalize, metadata, checklist, comment extraction, prompt olusturma, thinking/non-thinking agent istemcisi ve controller akisini kapsar. LLM davranisi model bagimli oldugu icin fixture sonuclari ayrica evaluation belgeleriyle incelenir.
+Yerel Ollama açıkken core'dan gerçek HTTP endpointine kadar olan akış manuel olarak çalıştırılabilir:
 
-## Proje Yapisi
-
-```text
-core/                           Kullanicinin bagimlilik olarak alacagi kutuphane
-  src/main/java/.../api/        Kutuphane giris API'si
-  src/main/java/.../normalize/  JSON normalizasyonu
-  src/main/java/.../prompt/     Prompt olusturma
-  src/main/resources/prompts/   Ortak sistem promptlari
-  src/test/java/                 Core testleri
-demo/                           Yerel Spring Boot ve Ollama demosu
-  src/main/java/.../demo/       Ollama, web ve rapor kartlari
-  src/main/resources/demo/      Demo ayarlari
-  src/main/resources/static/    Web demo arayuzu
-  src/test/java/                 Demo testleri
-evaluation/scenarios/         Fixture ve expected-result sozlesmeleri
-evaluation/demo-inputs/       Ayri issue, metadata ve checklist demo dosyalari
-docs/architecture/            Mimari kararlar ve UML notlari
-docs/evaluation/              Demo ve model degerlendirme belgeleri
+```bash
+RUN_OLLAMA_INTEGRATION=true mvn -pl demo -am \
+  -Dtest=OllamaAuditEngineIntegrationTest \
+  -Dsurefire.failIfNoSpecifiedTests=false test
 ```
 
-## Demo ve Degerlendirme
+Bu smoke testi normal `mvn clean test` çalışmasına bilinçli olarak dahil değildir; kurulu modele ve yerel donanıma bağlıdır.
 
-- Demo sirasi: `docs/evaluation/demo_walkthrough.md`
-- Kutuphane ve demo siniri: `docs/architecture/library_demo_ayrimi.md`
-- Senaryo katalogu: `docs/evaluation/scenario_catalog.md`
-- Guncel manuel sonuc ozeti: `docs/evaluation/current_results.md`
-- Ayrintili evaluation yaklasimi: `docs/evaluation/evaluation_strategy.md`
+## Proje Yapısı
 
-Model sonucu bir karar destegidir; nihai denetim karari degildir. Evaluation seti, false-positive ve false-negative davranislarini gorunur kilmak icin projede tutulur. Mevcut bilinen sinirlamalar guncel sonuc belgesinde acikca kaydedilmistir.
+```text
+core/
+  src/main/java/com/yusuf/audittool/
+    api/          Public kütüphane API'si
+    agent/        Entegrasyon transport sözleşmesi
+    normalize/    JSON normalizasyonu
+    metadata/     Metadata eşleştirmesi
+    checklist/    Checklist dönüşümü
+    prompt/       Context rendering ve prompt üretimi
+    model/        Core veri modelleri
+  src/main/resources/prompts/
+
+demo/
+  src/main/java/com/yusuf/audittool/demo/
+    ollama/       Yerel Ollama istemcileri
+    structured/   Demo rapor parse ve doğrulama akışı
+    web/          Demo HTTP controllerları
+  src/main/resources/static/demo/
+
+evaluation/
+  scenarios/      Fixture, tanım ve expected sözleşmeleri
+  demo-inputs/    Ayrı yüklenebilen demo JSON dosyaları
+
+docs/
+  architecture/   Güncel mimari ve tasarım kararları
+  integration/    Kütüphane entegrasyon rehberi
+  evaluation/     Model ve senaryo değerlendirme belgeleri
+  diagrams/       Elle yönetilen UML kaynakları
+```
+
+## Dokümantasyon
+
+| İhtiyaç | Belge |
+| --- | --- |
+| Nereden başlamalıyım? | [Dokümantasyon Merkezi](docs/README.md) |
+| Sistem içeride nasıl çalışıyor? | [Güncel Sistem Mimarisi](docs/architecture/guncel_sistem_mimarisi.md) |
+| Core ile demo neden ayrıldı? | [Kütüphane ve Demo Ayrımı](docs/architecture/library_demo_ayrimi.md) |
+| Başka bir projeye nasıl eklerim? | [Kütüphane Entegrasyon Rehberi](docs/integration/kutuphane_entegrasyonu.md) |
+| Prompt profilleri nasıl kullanılıyor? | [Güncel Sistem Mimarisi - Prompt Üretimi](docs/architecture/guncel_sistem_mimarisi.md#prompt-üretimi) |
+| Demo senaryolarını nasıl çalıştırırım? | [Demo Akışı](docs/evaluation/demo_walkthrough.md) |
+| Model kalitesi nasıl ölçülüyor? | [Değerlendirme Stratejisi](docs/evaluation/evaluation_strategy.md) |
+| Bilinen model sonuçları neler? | [Güncel Model Sonuçları](docs/evaluation/current_results.md) |
+
+Tüm belgeler ve okuma sırası [docs/README.md](docs/README.md) içinde bir araya getirilmiştir.
+
+## Kapsam Sınırları
+
+- Core, Jira API'sinden veri çekmez; kendisine verilen JSON'u işler.
+- Core, kurum endpointinin request ve response sözleşmesini tahmin etmez.
+- Core, LLM çıktısını kesin doğru kabul etmez ve ana akışta parse etmeye zorlamaz.
+- Metadata veya checklist yokluğu tek başına denetim bulgusu değildir.
+- DO-178C perspektifi kanıt disiplini sağlar; sistem sertifikasyon veya uygunluk kararı vermez.

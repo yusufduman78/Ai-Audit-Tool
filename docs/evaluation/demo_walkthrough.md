@@ -1,5 +1,7 @@
 # Demo Akisi
 
+> Uygulamanın kurulumu için [ana README](../../README.md), senaryoların beklenen anlamı için [Senaryo Kataloğu](scenario_catalog.md), bilinen model farkları için [Güncel Model Sonuçları](current_results.md) belgesine bakın.
+
 Bu akis, web arayuzunde projenin temel davranislarini gostermek icin secilmis kisa bir senaryo setidir. Temel demo icin `evaluation/demo-inputs/` altindaki ayri issue, metadata ve checklist dosyalari kullanilir. Eski tam fixture dosyalari da desteklenmeye devam eder.
 
 ## Calistirma

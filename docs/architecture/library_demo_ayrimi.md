@@ -1,81 +1,104 @@
 # Kütüphane ve Demo Ayrımı
 
-## Amaç
+Bu belge, `core` ile `demo` modüllerinin neden ayrıldığını ve hangi kodun hangi tarafta kalması gerektiğini tanımlar. Public API'nin ayrıntıları [Kütüphane Entegrasyon Rehberi](../integration/kutuphane_entegrasyonu.md), iç çalışma akışı ise [Güncel Sistem Mimarisi](guncel_sistem_mimarisi.md) belgesindedir.
 
-Projenin asıl teslimatı, başka bir Java uygulamasının çağırabileceği denetim motorudur. Web arayüzü, Ollama bağlantısı ve JSON rapor kartları bu motoru yerelde göstermek için korunmuş demo parçalarıdır. Kurum entegrasyonu demo sınıflarına bağlanmak zorunda değildir.
+## Karar Özeti
 
-## Ana Paketler
+Projenin asıl teslimatı, başka bir Java uygulamasının çağırabileceği denetim motorudur. Web arayüzü, Ollama bağlantısı, model kataloğu ve JSON rapor kartları bu motorun yerel gösterimidir.
 
 ```text
-core/src/main/java/com.yusuf.audittool
-  api/          Diğer projelerin kullanacağı giriş sınıfı ve veri nesneleri
-  agent/        Kuruma özel mesajlaşma kodunun uygulayacağı transport arayüzü
-  normalize/    JSON alanlarını ortak AgentContext yapısına dönüştürür
-  metadata/     Field metadata ve açıklamalarını alanlarla eşleştirir
-  checklist/    Checklist girdisini ortak modele dönüştürür
-  prompt/       Normalize edilmiş bağlamdan sistem promptu üretir
-  model/        Core katmanın ortak veri modelleri
-
-demo/src/main/java/com.yusuf.audittool.demo
-  ollama/       Yerel Ollama istemcisi ve model kataloğu
-  structured/   Demo için JSON rapor parserı ve validatoru
-  web/          Yalnızca demo HTTP controllerları
-  model/        Demo request/response modelleri
+audittool-core  <- üretimde tüketilecek kütüphane
+      ^
+      |
+audittool-demo  <- yerel Ollama ve web gösterimi
 ```
 
-`demo` modülü `audittool-core` modülüne bağlanabilir. Core modülü demo paketini import etmez. Bu tek yönlü bağımlılık, Ollama veya Spring MVC demosu kaldırılsa bile denetim motorunun korunmasını sağlar.
+Bağımlılık tek yönlüdür: `demo`, `core` artifact'ini kullanır; `core`, demo paketlerini import etmez.
 
-## Kütüphane Akışı
+## Sorumluluk Matrisi
 
-1. Entegrasyon uygulaması issue, metadata, alan açıklamaları ve checklist JSON düğümlerini `AuditInput` ile verir.
-2. `AuditEngine`, bu girdiyi `NormalizeService` ile `AgentContext` yapısına dönüştürür.
-3. `PromptBuilder`, ortak denetim talimatlarını ve Markdown çıktı başlıklarını kullanarak promptu oluşturur.
-4. `AuditEngine`, promptu entegrasyon uygulamasının sağladığı `AgentTransport` nesnesine verir.
-5. `AgentTransport`, kurumun gerçek HTTP mesaj sözleşmesini uygular.
-6. Modelden gelen metin değiştirilmeden `String` olarak çağıran uygulamaya döner.
+| Sorumluluk | Core | Demo | Tüketen kurum uygulaması |
+| --- | --- | --- | --- |
+| JSON normalizasyonu | Evet | Core üzerinden | Core üzerinden |
+| Metadata ve checklist eşleştirmesi | Evet | Core üzerinden | Core üzerinden |
+| Ortak audit promptu | Evet | Core üzerinden | Core üzerinden |
+| Kurum HTTP mesaj sözleşmesi | Hayır | Hayır | `AgentTransport` ile |
+| Yerel Ollama sözleşmesi | Hayır | Evet | İsteğe bağlı |
+| Web dosya yükleme arayüzü | Hayır | Evet | Kendi ihtiyacına göre |
+| Structured JSON rapor kartları | Hayır | Evet | Kendi ihtiyacına göre |
+| Nihai iş kararı | Hayır | Hayır | Yetkili kullanıcı |
+
+## Core Paketleri
+
+```text
+core/src/main/java/com/yusuf/audittool
+  api/          AuditEngine, AuditInput ve AgentEndpoint
+  agent/        AgentTransport sözleşmesi ve runtime exception
+  normalize/    JSON traversal, sınıflandırma, comment ve source extraction
+  metadata/     Field metadata ve açıklama eşleştirmesi
+  checklist/    Checklist dönüşümü
+  prompt/       Context rendering ve prompt şablonları
+  model/        Ortak normalize edilmiş veri modelleri
+```
+
+Core'un dışarıya önerilen giriş yüzeyi `api` ve `agent` paketleridir. Entegrasyon uygulaması normal kullanımda `NormalizeService`, `PromptBuilder` veya iç model sınıflarını tek tek kurmak zorunda değildir; `AuditEngine` bu akışı birleştirir.
+
+## Core Kullanım Akışı
+
+1. Entegrasyon uygulaması JSON değerlerini `AuditInput` içinde verir.
+2. `AuditEngine`, girdiyi `AgentContext` yapısına normalize eder.
+3. Ortak audit talimatı ve Markdown çıktı profiliyle prompt oluşturulur.
+4. Prompt, çağıranın sağladığı `AgentTransport` nesnesine verilir.
+5. Transport kurumun gerçek endpoint sözleşmesini uygular.
+6. Modelden gelen final metin `String` olarak çağırana döner.
 
 ```java
-AgentTransport transport = (prompt, endpoint) -> {
-    // Kurumun request body, kimlik doğrulama ve response okuma sözleşmesi burada uygulanır.
-    return companyAiClient.send(prompt, endpoint.getUri(), endpoint.getHeaders());
-};
+AgentTransport transport = (prompt, endpoint) ->
+        companyAiClient.send(prompt, endpoint.getUri(), endpoint.getHeaders());
 
 AuditEngine engine = new AuditEngine(transport);
-AuditInput input = new AuditInput(payload, metadata, fieldDescriptions, checklist);
-AgentEndpoint endpoint = new AgentEndpoint(
-        URI.create("https://ai.example.internal/message"),
-        Map.of("Authorization", "Bearer ...")
-);
+AuditInput input = new AuditInput(issue, metadata, fieldDescriptions, checklist);
 
-String report = engine.analyze(input, endpoint);
+String report = engine.analyze(
+        input,
+        AgentEndpoint.of("https://ai.example.internal/message")
+);
 ```
 
-Endpoint adresi tek başına request/response sözleşmesini açıklamaz. Bu nedenle core kütüphane, body alan adlarını veya response JSON yolunu tahmin etmez. Kurum sözleşmesi öğrenildiğinde yalnızca bir `AgentTransport` implementasyonu eklenir; normalize ve prompt akışı değişmez.
+Endpoint URL'si request/response sözleşmesini açıklamadığı için core body alan adlarını tahmin etmez. Kurum sözleşmesi öğrenildiğinde yalnızca transport implementasyonu eklenir.
+
+Tek metotlu facade ve dosya/HTTP kullanım örnekleri için [Entegrasyon Rehberi - Uygulama Facade'ı](../integration/kutuphane_entegrasyonu.md#4-uygulama-facadeını-oluşturma) bölümüne bakın.
 
 ## Prompt Profilleri
 
-- `core/src/main/resources/prompts/core_auditor.md`: Tüm kullanımlar için ortak denetim kuralları.
-- `core/src/main/resources/prompts/output_markdown.md`: Kütüphane akışında kullanılan, yalnızca rapor başlıklarını isteyen profil.
-- `core/src/main/resources/prompts/output_json.md`: Yerel web demosunun kart görünümü için kullandığı yapılandırılmış profil.
+Ortak audit mantığı ile çıktı biçimi ayrı dosyalardır:
 
-Kütüphane akışı modeli JSON şemasına zorlamaz ve raporu parse etmez. Kurum uygulaması isterse dönen Markdown metnini doğrudan gösterebilir veya kendi sözleşmesine göre sonradan işleyebilir.
+| Dosya | Kullanım |
+| --- | --- |
+| `core_auditor.md` | Her iki akışta ortak rol, kanıt, güvenlik ve sınıflandırma kuralları |
+| `output_markdown.md` | Core kütüphanenin doğrudan okunabilir metin raporu |
+| `output_json.md` | Yerel demonun structured rapor kartları |
+
+Core `AuditEngine`, Markdown profilini açıkça seçer. Demo Spring akışı varsayılan JSON profilini kullanır. Böylece çıktı biçimindeki bir değişiklik ortak audit kurallarını kopyalamayı gerektirmez.
+
+Prompt üretiminin ayrıntıları [Güncel Sistem Mimarisi - Prompt Üretimi](guncel_sistem_mimarisi.md#prompt-üretimi) bölümündedir.
 
 ## Demo Paketleri
 
 ```text
-com.yusuf.audittool.demo
-  DemoAuditToolApplication.java  Spring Boot demo başlangıcı
-  ollama/                        Ollama istemcisi, model kataloğu ve ayarları
+demo/src/main/java/com/yusuf/audittool/demo
+  DemoAuditToolApplication.java  Spring Boot başlangıcı
+  ollama/                        Ollama istemcileri, model kataloğu ve ayarlar
   structured/                    JSON rapor parserı ve validatoru
-  web/                           Yalnızca demo HTTP controllerları
+  web/                           Demo controllerları
   model/                         Demo request/response modelleri
 
 demo/src/main/resources
   demo/application-demo.properties
-  static/demo/                   Demo HTML, CSS ve JavaScript dosyaları
+  static/demo/                   HTML, CSS ve JavaScript
 ```
 
-Demo web adresleri de ayırt edici bir ön ek kullanır:
+Demo adresleri `/demo` ön ekiyle ayrılır:
 
 - Arayüz: `/demo/index.html`
 - Sağlık: `/demo/api/health`
@@ -83,19 +106,72 @@ Demo web adresleri de ayırt edici bir ön ek kullanır:
 - Normalize: `/demo/api/normalize`
 - Analiz: `/demo/api/analyze`
 
-Kök adres `/`, kolaylık için `/demo/index.html` adresine yönlendirir.
+Kök `/` adresi kolaylık amacıyla demo arayüzüne yönlendirilebilir; bu davranış core kütüphane sözleşmesi değildir.
+
+## İki Ollama Adapteri Neden Var?
+
+| Adapter | Kullanıldığı akış | Çıktı |
+| --- | --- | --- |
+| `OllamaAgentClient` | Web demo `AuditService` | JSON profile ve structured rapor denemesi |
+| `OllamaAgentTransport` | Core entegrasyon smoke testi | Markdown profile ve ham `String` rapor |
+
+`OllamaAgentClient`; model seçimi, thinking ve runtime JSON Schema gibi demo özelliklerini taşır. `OllamaAgentTransport` ise `AgentTransport` abstraction'ının gerçek bir HTTP sunucusuna bağlanabildiğini gösteren küçük adapterdir.
+
+Bu iki sınıfın birleştirilmesi zorunlu değildir; farklı ürün davranışlarını gösterirler. Kurum entegrasyonu ikisini de kullanmak zorunda değildir.
 
 ## Test Ayrımı
 
-Core testleri `core/src/test/java/com/yusuf/audittool` altındaki gerçek paketlerin yanındadır. Demo testleri ise `demo/src/test/java/com/yusuf/audittool/demo` altında Ollama, web ve structured alt klasörlerine ayrılmıştır. `mvn clean test` iki modülü birlikte çalıştırır.
+| Test grubu | Konum | Dış model gerekir mi? |
+| --- | --- | --- |
+| Core unit testleri | `core/src/test/java` | Hayır |
+| Demo web/structured testleri | `demo/src/test/java` | Hayır |
+| Mock Ollama transport testi | `demo/src/test/java/.../ollama` | Hayır |
+| Gerçek Ollama smoke testi | `OllamaAuditEngineIntegrationTest` | Evet, yalnızca açıkça etkinleştirilirse |
 
-## Maven Modülleri
+Standart test:
 
-Kök `pom.xml` yalnızca reactor görevi görür. Kütüphane ve demo ayrı ayrı derlenebilir:
+```bash
+mvn clean test
+```
+
+Manuel gerçek Ollama testi:
+
+```bash
+RUN_OLLAMA_INTEGRATION=true mvn -pl demo -am \
+  -Dtest=OllamaAuditEngineIntegrationTest \
+  -Dsurefire.failIfNoSpecifiedTests=false test
+```
+
+## Build ve Artifact'ler
+
+Kök `pom.xml` Maven reactor görevi görür:
 
 ```bash
 mvn -pl core clean package
 mvn -pl demo -am clean package
 ```
 
-Demo jarı `demo/target/audittool-demo-0.0.1-SNAPSHOT.jar` olarak üretilir. Başka bir uygulamanın kullanacağı temel artifact ise `core/target/audittool-core-0.0.1-SNAPSHOT.jar` dosyasıdır.
+Üretilen ana dosyalar:
+
+```text
+core/target/audittool-core-0.0.1-SNAPSHOT.jar
+demo/target/audittool-demo-0.0.1-SNAPSHOT.jar
+```
+
+Core artifact başka uygulamanın bağımlılığıdır. Demo jar ise çalıştırılabilir yerel gösterimdir.
+
+## Sınır Koruma Kuralları
+
+- Kuruma özel endpoint alan adları core'a eklenmez.
+- Spring controller ve web response modelleri core'a taşınmaz.
+- Ollama model parametreleri core public API'sini kirletmez.
+- Ortak normalizasyon davranışı demo içinde kopyalanmaz.
+- Core'da üretilen model metni demo parserı olmadan da kullanılabilir kalır.
+- Demo kaldırıldığında core build ve testleri çalışmaya devam etmelidir.
+
+## İlgili Belgeler
+
+- [Dokümantasyon Merkezi](../README.md)
+- [Güncel Sistem Mimarisi](guncel_sistem_mimarisi.md)
+- [Kütüphane Entegrasyon Rehberi](../integration/kutuphane_entegrasyonu.md)
+- [Demo Akışı](../evaluation/demo_walkthrough.md)

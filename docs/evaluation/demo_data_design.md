@@ -1,5 +1,7 @@
 # Demo Veri Tasarimi
 
+> Senaryoların audit anlamı [Senaryo Kataloğu](scenario_catalog.md) tarafından belirlenir. Local LLM yalnızca kontrollü metin alanlarını üretir; sınırlar [Yerel LLM ile Sentetik Metin Üretimi](local_llm_text_generation.md) belgesindedir.
+
 ## Amac
 
 Bu dokuman, evaluation setinde kullanilacak sentetik issue verilerinin gercek Jira kullanimina yakin olmasi icin kurallari tanimlar. Veri, kurum bilgisi veya gercek kisi verisi icermeden; field yogunlugu, custom field cesitliligi, comment gecmisi ve requirement change baglami bakimindan gercekci olmalidir.
@@ -185,20 +187,20 @@ Bu bulgular ancak metadata veya checklist ile anlam destekleniyorsa zorunlu find
 - URL ve avatar gibi noise alanlar aktif field listesine girmemelidir.
 - Comment body'leri sentetik, anonim ve prompt injection testleri disinda komut icermeyen metinlerden olusur.
 
-## Ilk Fixture Seti
+## Mevcut Fixture Seti
 
-Python ureticiden once elle tanimlanacak ilk fixture ailesi:
+İlk fixture ailesi aşağıdaki davranışları kapsayacak şekilde oluşturulmuştur:
 
 | Fixture | Profil | Ana amac |
 | --- | --- | --- |
-| `REQ-BASE-001` | Kucuk | Done fakat verification evidence bos |
-| `REQ-BASE-002` | Kucuk | Tam ve tutarli requirement |
-| `CHG-BASE-001` | Kucuk | Onayli change, impact analysis bos |
-| `COM-BASE-001` | Kucuk | Comment structured field ile celisiyor |
-| `LARGE-BASE-001` | Tipik kurum | 2.000 field, cogunlugu null |
+| `AUD-001` | Küçük | Done fakat verification evidence boş |
+| `AUD-007` | Küçük | Tam ve tutarlı requirement |
+| `AUD-013` | Küçük | Onaylı change, impact analysis boş |
+| `AUD-011` | Küçük | Comment ile structured field arasında zaman gerilimi |
+| `AUD-015` | Tipik kurum | Yaklaşık 2.000 field, çoğunluğu null |
 
-Bu fixture'lar model benchmarki degil, uretici ve normalize davranisi icin referans ornekleridir. Model benchmarki senaryo katalogundaki expected sozlesmelerle daha sonra olculur.
+Bu fixture'lar tek başına model benchmarkı değildir; normalize davranışı ve semantik expected sözleşmesi birlikte değerlendirilir. Gerçek dosyalar `evaluation/scenarios/`, arayüzde ayrı yüklenebilen paketler `evaluation/demo-inputs/` altındadır.
 
-## Sonraki Adim
+## Bakım Kuralı
 
-Bu tasarim onaylandiktan sonra `scenario_catalog.md` genisletilir. Comment, requirement change ve large payload davranislari icin yeni senaryo kodlari eklenir. Henuz Python kodu veya 2.000 fieldlik JSON dosyasi olusturulmaz.
+Yeni bir fixture eklenmeden önce audit anlamı [Senaryo Kataloğu](scenario_catalog.md) içinde tanımlanmalıdır. Ardından fixture ve expected sözleşmesi birlikte hazırlanır. Local LLM yalnızca doğal dil alanlarını zenginleştirir; hangi alanın null, empty veya active olduğunu ve beklenen audit sonucunu değiştiremez.

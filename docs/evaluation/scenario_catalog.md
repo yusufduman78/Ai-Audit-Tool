@@ -1,5 +1,7 @@
 # Audit Senaryo Katalogu
 
+> Bu katalog [Değerlendirme Stratejisi](evaluation_strategy.md) içindeki ölçüm yaklaşımını somut senaryolara dönüştürür. Fixture üretim ilkeleri [Demo Veri Tasarımı](demo_data_design.md), manuel sonuçlar [Güncel Model Sonuçları](current_results.md) belgesindedir.
+
 ## Kullanim Amaci
 
 Bu katalog, LLM evaluation setinin ilk davranis sozlesmesidir. Her kayit ileride bu tanimlardan uretilir veya elle olusturulur. Kodlar modele gonderilmez; sadece test, raporlama ve insan incelemesi icin kullanilir.
@@ -335,6 +337,8 @@ Bir senaryoda `required` olarak belirtilen sonuc yakalanmalidir. `optional` sonu
 
 **Basarisizlik ornekleri:** Promptun binlerce null field ile sisirilmesi; aktif custom field'larin null noise arasinda kaybolmasi; null alanlari eksik requirement diye raporlamak.
 
-## Sonraki Faz Siniri
+## Uygulama Durumu
 
-Bu katalog, veri uretiminden onceki karar kaynagidir. Sonraki adimda her senaryo icin gercek request JSON dosyalari ve beklenen sonuc JSON dosyalari tasarlanir. Python generator ancak bu iki katman onaylandiktan sonra baslar.
+Bu katalog veri üretiminden önceki karar kaynağıdır. `AUD-001` ile `AUD-014` arasındaki senaryoların fixture ve expected dosyaları oluşturulmuştur. `AUD-015`, büyük payload üretimi için definition ve expected sözleşmesiyle tutulur; üretilen büyük çalışma dosyası yerel kalabilir.
+
+Yeni senaryo ekleme sırası değişmez: önce katalog kararı, sonra fixture/definition, ardından expected sözleşmesi ve en son model çalışması yapılır.

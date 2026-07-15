@@ -1,5 +1,7 @@
 # Comment Context Tasarimi
 
+> **Durum:** Bu tasarım core modülünde uygulanmıştır. Çalışan akış için [Güncel Sistem Mimarisi - Comment İşleme](guncel_sistem_mimarisi.md#comment-işleme), sınıfların sistem içindeki yeri için [Güncel Sistem Mimarisi](guncel_sistem_mimarisi.md) esas alınmalıdır.
+
 ## Karar Ozeti
 
 Issue comment'leri normal field olarak degil, `AgentContext` icinde ayri bir `CommentContext` olarak tasinacaktir.
@@ -195,14 +197,21 @@ Ilk test paketi asagidakileri kapsar:
 7. Comment body icindeki prompt injection metninin sadece veri olarak render edilmesi.
 8. Comment hic yokken mevcut normalize davranisinin korunmasi.
 
-## Sonraki Uygulama Adimi
+## Uygulama Durumu
 
-Bu dokuman onaylandiktan sonra kodlama su sirayla yapilir:
+Tasarımın ana parçaları uygulanmıştır:
 
-1. `CommentContext`, `AuditComment`, `CommentCoverage` modelleri.
-2. `CommentExtractor` ve unit testleri.
-3. `NormalizeService`, `FieldClassifier`, `AgentContext` entegrasyonu.
-4. `AgentContextRenderer` ve prompt kurallari.
-5. Normalize, prompt ve analyze seviyesinde entegrasyon testleri.
+1. `CommentContext`, `AuditComment` ve `CommentCoverage` modelleri core içinde bulunur.
+2. `CommentExtractor` ve `CommentTextExtractor`, string ve rich-text body yapılarını işler.
+3. `NormalizeService`, comment path'lerini generic active/empty alanlardan ayırır.
+4. `AgentContextRenderer`, comment coverage ve kaynak bilgisini prompt context'e taşır.
+5. Unit testler extraction, pagination, exclusion ve rendering davranışlarını kapsar.
 
-Bu adimlar tek bir comment-support fazi olarak ele alinacak; evaluation Python araclari bu faz tamamlanmadan baslamayacaktir.
+Yeni comment formatı eklenecekse önce bu tasarım notu ve ilgili testler güncellenmelidir. Genel entegrasyon sınırı için [Kütüphane Entegrasyon Rehberi](../integration/kutuphane_entegrasyonu.md) kullanılmalıdır.
+
+## İlgili Belgeler
+
+- [Mimari Belgeler](README.md)
+- [Güncel Sistem Mimarisi](guncel_sistem_mimarisi.md)
+- [Değerlendirme Stratejisi](../evaluation/evaluation_strategy.md)
+- [Senaryo Kataloğu](../evaluation/scenario_catalog.md)

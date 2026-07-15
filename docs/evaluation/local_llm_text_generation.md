@@ -1,5 +1,7 @@
 # Local LLM ile Sentetik Metin Uretimi
 
+> Bu belge [Demo Veri Tasarımı](demo_data_design.md) içindeki kontrollü fixture yaklaşımının yalnızca doğal dil üretimi bölümünü açıklar. Ground truth ve beklenen sonuçlar [Senaryo Kataloğu](scenario_catalog.md) tarafından belirlenir.
+
 ## Amac
 
 Evaluation fixture'larinin field degerleri ve comment'leri, tamamen sabit placeholder metinlerden daha gercekci olmalidir. Local LLM bu noktada requirement aciklamasi, change rationale, verification evidence ve comment body gibi dogal dil metinlerini uretmek icin kullanilir.
@@ -143,13 +145,13 @@ LLM uretimi tam anlamiyla deterministik kabul edilmez. Bu nedenle tekrar uretmek
 - Model ciktisi terminal loglarina tam metin olarak yazilmaz.
 - URL veya attachment linki audit kaniti yerine uretilmez.
 
-## Ilk Uygulama Siniri
+## Mevcut Uygulama Sınırı
 
-Python kodu basladiginda once yalnizca `AUD-015` large payload tanimi desteklenir. Summary ve verification evidence tanimdan deterministik olarak gelir. LLM yalnizca su alanlara metin saglar:
+Yerel Python araçlarının ilk uygulaması `AUD-015` large payload tanımına odaklanır. Summary ve verification evidence tanımdan deterministic olarak gelir. LLM yalnızca şu alanlara metin sağlar:
 
 ```text
 iki comment body
 ek aktif custom field degerleri
 ```
 
-Requirement change rationale ve coklu comment varyasyonlari, `AUD-013` ve `AUD-011` fixture'lari sabit referans olarak kullanildiktan sonra eklenir.
+Araçlar `evaluation/local/` altında Git dışında tutulur. Kabul edilen fixture metni tekrar üretim sırasında değiştirilmez; yeni varyasyon gerekiyorsa ayrı fixture veya açık bir revision oluşturulur. Requirement change ve comment örnekleri için `AUD-013` ile `AUD-011` sabit referans olarak kullanılır.
