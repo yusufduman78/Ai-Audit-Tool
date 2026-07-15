@@ -1,0 +1,12 @@
+{
+  "customfield_10500": "Gereksinimin sistem, yazilim veya diger gereksinim sinifini belirtir.",
+  "customfield_11023": "Gereksinimin hangi dogrulama yontemiyle degerlendirilecegini belirtir.",
+  "customfield_13313": "Tamamlanan gereksinim icin test raporu, analiz kaydi veya inceleme sonucu gibi nesnel dogrulama kanitini icerir.",
+  "customfield_11643": "Gereksinimin tamamlandigini gosteren olculebilir kabul kosullarini icerir.",
+  "customfield_11642": "Gereksinimin bagli oldugu konfigürasyon baseline bilgisini belirtir.",
+  "customfield_11648": "Gereksinimin karar ve dogrulama onceligini etkileyen kritiklik seviyesini belirtir.",
+  "customfield_11641": "Degisiklik kaydini baslatan nedeni siniflandirir.",
+  "customfield_10004": "Dogrulama faaliyetinin kapsadigi test veya inceleme turlerini belirtir.",
+  "customfield_11607": "Dogrulamanin gerceklestirildigi veya planlandigi ortami belirtir.",
+  "customfield_13355": "Degisikligin mevcut dogrulama kapsami, yontemi ve tekrar test ihtiyaci uzerindeki etkisini belirtir."
+}
