@@ -24,6 +24,7 @@
 
     <modules>
         <module>core</module>
+        <module>opencode-adapter</module>
         <module>demo</module>
     </modules>
 </project>
