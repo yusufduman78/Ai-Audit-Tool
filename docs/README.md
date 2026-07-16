@@ -7,8 +7,9 @@ Bu klasör, Generic AI Audit Tool için mimari, entegrasyon, demo ve model değe
 1. Projeyi çalıştırmak ve genel amacı görmek için [ana README](../README.md).
 2. Sistemin iç akışını anlamak için [Güncel Sistem Mimarisi](architecture/guncel_sistem_mimarisi.md).
 3. Başka bir uygulamaya eklemek için [Kütüphane Entegrasyon Rehberi](integration/kutuphane_entegrasyonu.md).
-4. Core ile yerel demonun neden ayrıldığını görmek için [Kütüphane ve Demo Ayrımı](architecture/library_demo_ayrimi.md).
-5. Model kalitesini ve test senaryolarını incelemek için [Değerlendirme Belgeleri](evaluation/README.md).
+4. OpenCode içinde ajan olarak kullanmak için [OpenCode Denetim Ajanı Kullanım Rehberi](integration/opencode_agent_kullanimi.md).
+5. Core ile yerel demonun neden ayrıldığını görmek için [Kütüphane ve Demo Ayrımı](architecture/library_demo_ayrimi.md).
+6. Model kalitesini ve test senaryolarını incelemek için [Değerlendirme Belgeleri](evaluation/README.md).
 
 ## Belge Haritası
 
@@ -27,6 +28,7 @@ Bu klasör, Generic AI Audit Tool için mimari, entegrasyon, demo ve model değe
 | Belge | Ne anlatır? |
 | --- | --- |
 | [Kütüphane Entegrasyon Rehberi](integration/kutuphane_entegrasyonu.md) | Maven bağımlılığı, `AuditInput`, `AgentTransport`, `AgentEndpoint`, facade örneği, test ve hata yönetimi |
+| [OpenCode Denetim Ajanı Kullanım Rehberi](integration/opencode_agent_kullanimi.md) | `/audit` komutu, Java adapter, ajan izinleri, model/endpoint ayrımı ve mentöre teslim akışı |
 
 ### Değerlendirme ve Demo
 

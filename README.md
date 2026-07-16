@@ -45,6 +45,7 @@ Core kütüphane dosya yolu, HTTP request gövdesi, kimlik doğrulama biçimi ve
 | Bölüm | Sorumluluk | Üretim bağımlılığı olarak kullanılır mı? |
 | --- | --- | --- |
 | `core/` | Normalizasyon, prompt üretimi ve public kütüphane API'si | Evet |
+| `opencode-adapter/` | Core normalizasyonunu kısıtlı OpenCode ajanına açan çalıştırılabilir CLI adapter | OpenCode kullanımı için |
 | `demo/` | Spring Boot, Ollama adapterleri ve web arayüzü | Hayır, yalnızca gösterim ve yerel test |
 | `evaluation/` | Senaryolar, beklenen sonuçlar ve demo girdileri | Test ve model değerlendirmesi için |
 | `docs/` | Mimari, entegrasyon ve değerlendirme belgeleri | Başvuru kaynağı |
@@ -124,6 +125,22 @@ String report = engine.analyze(input, endpoint);
 Buradaki `issue`, `metadata`, `fieldDescriptions` ve `checklist` değerleri Jackson `JsonNode` nesneleridir; dosya yolu değildir. Dosyadan okuma veya HTTP request gövdesini parse etme işi kütüphaneyi kullanan uygulamaya aittir.
 
 Gerçek projede tek metotlu bir facade, transport implementasyonu, header yönetimi, hata sınırları ve test örneği için [Kütüphane Entegrasyon Rehberi](docs/integration/kutuphane_entegrasyonu.md) belgesine bakın.
+
+## OpenCode Ajanı Olarak Kullanım
+
+Repository kökünde OpenCode'u başlatın:
+
+```bash
+opencode
+```
+
+Ardından issue ve opsiyonel yardımcı JSON dosyalarını `/audit` komutuna verin:
+
+```text
+/audit <issue.json> <metadata.json> <field-descriptions.json> <checklist.json>
+```
+
+Bu akışta OpenCode ajanı ham JSON'u doğrudan yorumlamaz. `opencode-adapter`, aynı core normalizasyonunu çalıştırır; ajan normalize edilmiş bağlamı `core_auditor.md` politikasıyla değerlendirir. Kurulum, izin sınırları, hazır örnek ve model/endpoint ayrımı için [OpenCode Denetim Ajanı Kullanım Rehberi](docs/integration/opencode_agent_kullanimi.md) belgesine bakın.
 
 ## Demo API
 

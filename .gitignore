@@ -51,5 +51,8 @@ temp/
 # Local personal notes
 docs/local/
 
+# OpenCode plugin runtime state
+.omo/
+
 # Local evaluation experiments and generated LLM drafts
 evaluation/local/

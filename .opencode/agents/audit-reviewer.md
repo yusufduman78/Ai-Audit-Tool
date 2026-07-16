@@ -11,6 +11,7 @@ permission:
   bash:
     "*": deny
     "mvn -q -pl opencode-adapter -am package -DskipTests": allow
+    "mvn -q -pl opencode-adapter -am package -DskipTests 2>&1": allow
     "java -jar opencode-adapter/target/audittool-opencode-adapter.jar *": allow
   question: allow
 ---

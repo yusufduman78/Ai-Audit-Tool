@@ -1,14 +1,15 @@
 # Generic AI Audit Tool - Güncel Sistem Mimarisi
 
-Bu belge, çalışan kodun mimari ana kaynağıdır. Sistemin merkezinde başka bir Java uygulamasının kullanabileceği `core` kütüphanesi bulunur. Spring Boot, Ollama, model seçimi ve web arayüzü yalnızca `demo` modülüne aittir.
+Bu belge, çalışan kodun mimari ana kaynağıdır. Sistemin merkezinde başka bir Java uygulamasının kullanabileceği `core` kütüphanesi bulunur. Spring Boot, Ollama, model seçimi ve web arayüzü yalnızca `demo` modülüne aittir. `opencode-adapter` ise aynı normalizasyonu kısıtlı bir OpenCode ajanına açan ince bir CLI katmanıdır.
 
-Başka bir projeden kullanım için [Kütüphane Entegrasyon Rehberi](../integration/kutuphane_entegrasyonu.md), modül ayrımının gerekçesi için [Kütüphane ve Demo Ayrımı](library_demo_ayrimi.md) belgesini kullanın.
+Başka bir projeden kullanım için [Kütüphane Entegrasyon Rehberi](../integration/kutuphane_entegrasyonu.md), OpenCode kullanımı için [OpenCode Denetim Ajanı Kullanım Rehberi](../integration/opencode_agent_kullanimi.md), modül ayrımının gerekçesi için [Kütüphane ve Demo Ayrımı](library_demo_ayrimi.md) belgesini kullanın.
 
 ## İçindekiler
 
 - [Amaç ve sınır](#amaç-ve-sınır)
 - [Maven modülleri](#maven-modülleri)
 - [Public API](#public-api)
+- [OpenCode ajan akışı](#opencode-ajan-akışı)
 - [Normalizasyon akışı](#normalizasyon-akışı)
 - [Prompt üretimi](#prompt-üretimi)
 - [Çıktı sözleşmeleri](#çıktı-sözleşmeleri)
@@ -59,13 +60,15 @@ Sistemin sorumluluğu olmayan işler şunlardır:
 
 ```text
 root pom.xml
-|- core/   audittool-core
-`- demo/   audittool-demo -> audittool-core
+|- core/               audittool-core
+|- opencode-adapter/   audittool-opencode-adapter -> audittool-core
+`- demo/               audittool-demo -> audittool-core
 ```
 
 | Modül | İçerik | Bağımlılık yönü |
 | --- | --- | --- |
-| `core` | Public API, normalizasyon, metadata, checklist, comment, prompt ve ortak modeller | `demo` paketlerini bilmez |
+| `core` | Public API, normalizasyon, metadata, checklist, comment, prompt ve ortak modeller | `demo` ve `opencode-adapter` paketlerini bilmez |
+| `opencode-adapter` | Proje içi JSON dosyalarını okuyup core normalizasyonunu çalıştıran CLI | Yalnızca `core` artifact'ine bağlıdır |
 | `demo` | Spring Boot, Ollama adapterleri, web arayüzü, structured rapor parserı | `core` artifact'ine bağlıdır |
 
 `core` Jackson ve bazı Spring altyapı sınıflarını kullanır; ancak Spring MVC, web arayüzü veya Ollama istemcisine bağlı değildir. Kurum uygulaması yalnızca `audittool-core` artifact'ini tüketebilir.
@@ -127,6 +130,17 @@ Kurumun authentication, request body, timeout ve response parse etme kuralları 
 
 Core, final model metnini JSON'a zorlamaz veya parse etmez.
 
+### AuditContextPreparer
+
+[`AuditContextPreparer`](../../core/src/main/java/com/yusuf/audittool/api/AuditContextPreparer.java), transport veya LLM çağrısı yapmadan yalnızca veri hazırlama aşamasını public API olarak açar:
+
+```java
+AgentContext context = preparer.normalize(input);
+String renderedContext = preparer.prepare(input);
+```
+
+Bu API, OpenCode adapterının core iç sınıflarını yeniden kurmadan aynı `NormalizeService` ve `AgentContextRenderer` davranışını kullanmasını sağlar. Normal Java ürün entegrasyonunda tek çağrılı `AuditEngine` tercih edilir; `AuditContextPreparer` agent, CLI veya kontrollü önizleme gibi yalnızca normalize bağlam isteyen yüzeyler içindir.
+
 ## Uçtan Uca Core Akışı
 
 ```mermaid
@@ -149,6 +163,33 @@ sequenceDiagram
     Transport-->>Engine: final metin
     Engine-->>App: String rapor
 ```
+
+## OpenCode Ajan Akışı
+
+OpenCode yolu kurum endpointine çağrı yapan `AgentTransport` akışından ayrıdır. Bu yolda model çalıştırmayı OpenCode üstlenir; Java adapter yalnızca dosya doğrulama ve normalizasyon yapar.
+
+```mermaid
+flowchart LR
+    A["Kullanıcı /audit komutu"] --> B["audit-reviewer ajanı"]
+    B --> C["NormalizeContextCommand"]
+    C --> D["AuditContextPreparer"]
+    D --> E["NormalizeService"]
+    E --> F["Normalize edilmiş metin bağlamı"]
+    F --> B
+    G["core_auditor.md"] --> B
+    H["output_markdown.md"] --> B
+    B --> I["Markdown denetim raporu"]
+```
+
+Adapter şu sınırları uygular:
+
+- Issue dosyası zorunludur; metadata, alan açıklamaları ve checklist opsiyoneldir.
+- Dosyalar repository çalışma ağacının içinde kalmalıdır.
+- JSON, Jackson ile parse edilmeden normalizasyona verilmez.
+- Adapter model çağrısı yapmaz ve audit kararı üretmez.
+- Ajanın shell ve read izinleri `.opencode/agents/audit-reviewer.md` içinde daraltılmıştır.
+
+Komut ve teslim adımları [OpenCode Denetim Ajanı Kullanım Rehberi](../integration/opencode_agent_kullanimi.md) içinde açıklanır.
 
 ## Normalizasyon Akışı
 
@@ -380,6 +421,7 @@ Demo kullanımı ve önerilen senaryolar için [Demo Akışı](../evaluation/dem
 | Katman | Hata örneği | Sorumlu taraf |
 | --- | --- | --- |
 | Girdi | Payload yok veya JSON parse edilemedi | Entegrasyon uygulaması / `NormalizeService` |
+| OpenCode adapter | Dosya çalışma ağacı dışında veya CLI argümanı geçersiz | `NormalizeContextCommand` |
 | Endpoint | Göreli veya HTTP dışı URI | `AgentEndpoint` |
 | Transport | Timeout, TLS, authentication veya HTTP hata kodu | Kuruma özel `AgentTransport` |
 | Model | Boş response | `AuditEngine` tarafından reddedilir |
@@ -397,6 +439,13 @@ Core unit testleri şu deterministic davranışları kapsar:
 - Comment body ve coverage extraction.
 - Context rendering ve prompt profili.
 - Public `AuditEngine` sözleşmesi.
+- Public `AuditContextPreparer` sözleşmesi.
+
+OpenCode adapter testleri şunları kapsar:
+
+- CLI argüman doğrulaması.
+- Worktree dışındaki dosyaların reddedilmesi.
+- JSON girdilerinden normalize context üretilmesi.
 
 Demo testleri şunları kapsar:
 
@@ -439,6 +488,7 @@ Gerçek model davranışı unit test kabul edilmez. Senaryo fixture'ları ve mod
 
 - [Dokümantasyon Merkezi](../README.md)
 - [Kütüphane Entegrasyon Rehberi](../integration/kutuphane_entegrasyonu.md)
+- [OpenCode Denetim Ajanı Kullanım Rehberi](../integration/opencode_agent_kullanimi.md)
 - [Kütüphane ve Demo Ayrımı](library_demo_ayrimi.md)
 - [Comment Context Tasarımı](comment_context_design.md)
 - [Değerlendirme Stratejisi](../evaluation/evaluation_strategy.md)

@@ -42,6 +42,9 @@ class PromptBuilderTest {
         assertTrue(template.contains("untrusted data"));
         assertTrue(template.contains("DO-178C / ED-12C"));
         assertTrue(template.contains("not certification evidence"));
+        assertTrue(template.contains("the supplied record may be complete and internally consistent"));
+        assertTrue(template.contains("zero findings and zero observations is a valid result"));
+        assertTrue(template.contains("Prefer a supported clean result"));
         assertTrue(template.contains("EMPTY_ARRAY"));
         assertTrue(template.contains("comment coverage"));
         assertTrue(template.contains("Evaluate tension between a comment and a field in this order"));
@@ -49,6 +52,8 @@ class PromptBuilderTest {
         assertTrue(template.contains("Insufficient Context"));
         assertTrue(template.contains("apply this sequence"));
         assertTrue(template.contains("report the timing tension as an `Observation`"));
+        assertTrue(template.contains("criterion satisfied; no finding for this criterion"));
+        assertTrue(template.contains("produce a finding-free report without adding a compensating observation"));
         assertTrue(template.contains("already evaluated"));
         assertTrue(template.contains("Source: payload"));
         assertTrue(template.contains("Do not introduce a new artifact type"));
@@ -86,6 +91,7 @@ class PromptBuilderTest {
         assertTrue(prompt.contains("## Bulgular"));
         assertTrue(prompt.contains("## Gözlemler ve Yetersiz Bağlam"));
         assertTrue(prompt.contains("## Önerilen Aksiyonlar"));
+        assertTrue(prompt.contains("Do not add an observation merely to avoid an empty section"));
         assertFalse(prompt.contains("valid JSON object"));
         assertFalse(prompt.contains("{{OUTPUT_REQUIREMENTS}}"));
     }

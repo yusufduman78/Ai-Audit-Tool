@@ -2,6 +2,8 @@
 
 Bu rehber, `audittool-core` modülünün başka bir Java uygulamasından nasıl kullanılacağını açıklar. Hedef kullanım, issue ve yardımcı JSON verilerini alan tek bir facade metodunun kurum LLM endpointine denetim isteği göndermesi ve model raporunu `String` olarak döndürmesidir.
 
+Projeyi OpenCode içinde dosya yolları verilen etkileşimli bir ajan olarak çalıştırmak farklı bir kullanım biçimidir. Bunun için [OpenCode Denetim Ajanı Kullanım Rehberi](opencode_agent_kullanimi.md) kullanılmalıdır.
+
 İç mimariyi önce görmek isterseniz [Güncel Sistem Mimarisi](../architecture/guncel_sistem_mimarisi.md), core ile demonun sınırı için [Kütüphane ve Demo Ayrımı](../architecture/library_demo_ayrimi.md) belgesini okuyun.
 
 ## İçindekiler
@@ -303,5 +305,6 @@ Bu test normalizasyon ile prompt üretiminin transporta ulaştığını doğrula
 - [Ana README](../../README.md)
 - [Güncel Sistem Mimarisi](../architecture/guncel_sistem_mimarisi.md)
 - [Kütüphane ve Demo Ayrımı](../architecture/library_demo_ayrimi.md)
+- [OpenCode Denetim Ajanı Kullanım Rehberi](opencode_agent_kullanimi.md)
 - [Değerlendirme Stratejisi](../evaluation/evaluation_strategy.md)
 - [Dokümantasyon Merkezi](../README.md)
