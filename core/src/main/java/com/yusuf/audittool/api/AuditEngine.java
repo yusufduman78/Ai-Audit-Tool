@@ -4,14 +4,8 @@ import java.util.Objects;
 
 import com.yusuf.audittool.agent.AgentRuntimeException;
 import com.yusuf.audittool.agent.AgentTransport;
-import com.yusuf.audittool.checklist.ChecklistMapper;
-import com.yusuf.audittool.metadata.MetadataMapper;
 import com.yusuf.audittool.model.AgentContext;
-import com.yusuf.audittool.normalize.CommentExtractor;
-import com.yusuf.audittool.normalize.FieldClassifier;
-import com.yusuf.audittool.normalize.GenericJsonWalker;
 import com.yusuf.audittool.normalize.NormalizeService;
-import com.yusuf.audittool.normalize.SourceInfoExtractor;
 import com.yusuf.audittool.prompt.AgentContextRenderer;
 import com.yusuf.audittool.prompt.PromptBuilder;
 import com.yusuf.audittool.prompt.PromptTemplateLoader;
@@ -54,14 +48,7 @@ public final class AuditEngine {
     }
 
     private static NormalizeService defaultNormalizeService() {
-        return new NormalizeService(
-                new GenericJsonWalker(),
-                new FieldClassifier(),
-                new CommentExtractor(),
-                new SourceInfoExtractor(),
-                new ChecklistMapper(),
-                new MetadataMapper()
-        );
+        return AuditContextPreparer.defaultNormalizeService();
     }
 
     private static PromptBuilder defaultPromptBuilder() {
