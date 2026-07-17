@@ -11,6 +11,8 @@ Return only a valid JSON object. Do not use Markdown, code fences, explanatory t
 
 Use empty arrays when there are no findings or observations. Preserve field names and values as they appear in the context. Do not repeat the same issue in multiple sections.
 
+The JSON contract has two collections: put `Finding` items in `findings`; put both `Observation` and `Insufficient Context` items in `observations`, distinguished by the exact `type` value. Do not create a third collection.
+
 Write `summary`, finding `title`, `category`, `rationale`, `recommendedAction`, observation `description`, and `recommendation` in Turkish. Keep evidence quotations, field names, paths, and source values in their original language.
 
 Choose the report classification before writing. The JSON schema provided by the runtime is mandatory: use its exact field names and do not create synonyms such as `short_justification`. Return only the final report; do not include drafts, notes, self-corrections, alternative answers, or explanations of how the report should be rewritten.

@@ -87,7 +87,7 @@ Prompt üretiminin ayrıntıları [Güncel Sistem Mimarisi - Prompt Üretimi](gu
 
 ## OpenCode Adapter Sınırı
 
-`opencode-adapter`, core'un ikinci bir audit motoru değildir. `NormalizeContextCommand` yalnızca proje içindeki JSON dosyalarını doğrular, `AuditInput` oluşturur ve `AuditContextPreparer` sonucunu standart çıktıya yazar.
+`opencode-adapter`, core'un ikinci bir audit motoru değildir. `NormalizeContextCommand` yalnızca proje içindeki JSON dosyalarını doğrular, `AuditInput` oluşturur ve `AuditContextPreparer` sonucunu sürümlü bir JSON envelope içinde standart çıktıya yazar. `.opencode/tools/normalize_audit.ts` bu JAR'ı shell olmadan çalıştırır ve yalnızca doğrulanmış normalize bağlamı ajana verir.
 
 Denetim kararını OpenCode içindeki `audit-reviewer` ajanı verir. Ajan ortak `core_auditor.md` politikasını ve `output_markdown.md` profilini kullanır. Böylece Java ürün entegrasyonu ile OpenCode ajanı aynı normalizasyon ve denetim ilkelerini paylaşır; model çağrısının sahibi farklı kalır.
 

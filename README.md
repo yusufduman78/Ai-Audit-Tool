@@ -128,6 +128,12 @@ Gerçek projede tek metotlu bir facade, transport implementasyonu, header yönet
 
 ## OpenCode Ajanı Olarak Kullanım
 
+İlk kurulumda typed tool'un kullanacağı adapter JAR'ını test edip paketleyin:
+
+```bash
+mvn -pl opencode-adapter -am clean package
+```
+
 Repository kökünde OpenCode'u başlatın:
 
 ```bash
@@ -140,7 +146,7 @@ Ardından issue ve opsiyonel yardımcı JSON dosyalarını `/audit` komutuna ver
 /audit <issue.json> <metadata.json> <field-descriptions.json> <checklist.json>
 ```
 
-Bu akışta OpenCode ajanı ham JSON'u doğrudan yorumlamaz. `opencode-adapter`, aynı core normalizasyonunu çalıştırır; ajan normalize edilmiş bağlamı `core_auditor.md` politikasıyla değerlendirir. Kurulum, izin sınırları, hazır örnek ve model/endpoint ayrımı için [OpenCode Denetim Ajanı Kullanım Rehberi](docs/integration/opencode_agent_kullanimi.md) belgesine bakın.
+Bu akışta OpenCode ajanı ham JSON'u doğrudan yorumlamaz ve bash çalıştıramaz. Şemalı `normalize_audit` aracı, `opencode-adapter` üzerinden aynı core normalizasyonunu çalıştırır; ajan yalnızca doğrulanmış normalize bağlamı `core_auditor.md` politikasıyla değerlendirir. Kurulum, izin sınırları, hazır örnek ve model/endpoint ayrımı için [OpenCode Denetim Ajanı Kullanım Rehberi](docs/integration/opencode_agent_kullanimi.md) belgesine bakın.
 
 ## Demo API
 

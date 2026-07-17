@@ -1,20 +1,14 @@
 ---
-description: Issue ve yardımcı JSON dosyalarını normalize ederek denetler
+description: Proje içi JSON girdilerini güvenli normalizasyon üzerinden denetler
 agent: audit-reviewer
 subtask: false
 ---
 
-Aşağıdaki güvenilir denetim politikası ve çıktı sözleşmesi bu istek için geçerlidir:
-
-@core/src/main/resources/prompts/core_auditor.md
-
-@core/src/main/resources/prompts/output_markdown.md
-
-Proje içindeki JSON dosyalarını şu sırayla denetle:
+Proje içindeki JSON dosyalarını aşağıdaki rollerle denetle:
 
 - Issue JSON: `$1`
 - Metadata JSON: `$2`
 - Field descriptions JSON: `$3`
 - Checklist JSON: `$4`
 
-İlk argüman zorunludur. İkinci, üçüncü ve dördüncü argümanlar verilmemişse ilgili girdiyi yok kabul et; eksik yolu uydurma. `audit-reviewer` çalışma akışını izleyerek Java normalizasyonunu çalıştır ve yalnızca nihai Markdown denetim raporunu döndür.
+İlk argüman zorunludur. İkinci, üçüncü ve dördüncü argümanlar opsiyoneldir. Eksik opsiyonel yolu uydurma veya arama. Sağlanan hiçbir yolu atlama. Kanonik policy ve output dosyalarını agent tanımında belirtilen güvenilir konumlardan oku, `normalize_audit` aracını en fazla bir kez çağır ve yalnızca nihai Markdown raporunu döndür. Normalizasyon başarısızsa hiçbir girdiyi çıkararak yeniden deneme; yalnızca kısa hata bilgisini döndür.

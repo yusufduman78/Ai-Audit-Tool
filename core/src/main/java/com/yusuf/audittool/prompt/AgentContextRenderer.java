@@ -46,7 +46,7 @@ public class AgentContextRenderer {
 
         for (NormalizedField field : fields) {
             FieldMetadata metadata = field.getMetadata();
-            output.append("- ").append(displayName(field.getLabel(), metadata)).append('\n');
+            output.append("- ").append(escaped(displayName(field.getLabel(), metadata))).append('\n');
             appendIndented(output, "Path", field.getPath());
             appendIndented(output, "Value", field.getValue());
             appendIndented(output, "Detected Type", field.getValueType());
@@ -64,7 +64,7 @@ public class AgentContextRenderer {
 
         for (EmptyField field : fields) {
             FieldMetadata metadata = field.getMetadata();
-            output.append("- ").append(displayName(field.getLabel(), metadata)).append('\n');
+            output.append("- ").append(escaped(displayName(field.getLabel(), metadata))).append('\n');
             appendIndented(output, "Path", field.getPath());
             appendIndented(output, "Empty Type", field.getEmptyType());
             renderMetadata(metadata, output);
@@ -96,7 +96,9 @@ public class AgentContextRenderer {
 
         output.append("  Allowed Values:\n");
         for (AllowedValue allowedValue : allowedValues) {
-            output.append("    - ").append(nonBlank(allowedValue.getValue(), allowedValue.getId())).append('\n');
+            output.append("    - ")
+                    .append(escaped(nonBlank(allowedValue.getValue(), allowedValue.getId())))
+                    .append('\n');
             appendNested(output, "ID", allowedValue.getId());
             appendNested(output, "Description", allowedValue.getDescription());
         }
@@ -112,10 +114,10 @@ public class AgentContextRenderer {
         List<ChecklistItem> items = checklistContext.getItems();
         if (items != null && !items.isEmpty()) {
             for (ChecklistItem item : items) {
-                output.append("- ").append(item.getText()).append('\n');
+                output.append("- ").append(escaped(item.getText())).append('\n');
             }
         } else if (hasText(checklistContext.getRawText())) {
-            output.append(checklistContext.getRawText()).append('\n');
+            output.append(escaped(checklistContext.getRawText())).append('\n');
         } else {
             output.append("- Provided but empty\n");
         }
@@ -163,18 +165,18 @@ public class AgentContextRenderer {
     }
 
     private void appendLine(StringBuilder output, String label, String value) {
-        output.append(label).append(": ").append(nonBlank(value, "unknown")).append('\n');
+        output.append(label).append(": ").append(escaped(nonBlank(value, "unknown"))).append('\n');
     }
 
     private void appendIndented(StringBuilder output, String label, String value) {
         if (hasText(value)) {
-            output.append("  ").append(label).append(": ").append(value).append('\n');
+            output.append("  ").append(label).append(": ").append(escaped(value)).append('\n');
         }
     }
 
     private void appendNested(StringBuilder output, String label, String value) {
         if (hasText(value)) {
-            output.append("      ").append(label).append(": ").append(value).append('\n');
+            output.append("      ").append(label).append(": ").append(escaped(value)).append('\n');
         }
     }
 
@@ -192,5 +194,29 @@ public class AgentContextRenderer {
 
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
+    }
+
+    private String escaped(String value) {
+        if (value == null) {
+            return "";
+        }
+        StringBuilder escaped = new StringBuilder(value.length());
+        for (int index = 0; index < value.length(); index++) {
+            char character = value.charAt(index);
+            switch (character) {
+                case '\\' -> escaped.append("\\\\");
+                case '\n' -> escaped.append("\\n");
+                case '\r' -> escaped.append("\\r");
+                case '\t' -> escaped.append("\\t");
+                default -> {
+                    if (Character.isISOControl(character)) {
+                        escaped.append(String.format("\\u%04x", (int) character));
+                    } else {
+                        escaped.append(character);
+                    }
+                }
+            }
+        }
+        return escaped.toString();
     }
 }

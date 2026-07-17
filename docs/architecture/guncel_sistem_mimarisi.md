@@ -171,23 +171,28 @@ OpenCode yolu kurum endpointine çağrı yapan `AgentTransport` akışından ayr
 ```mermaid
 flowchart LR
     A["Kullanıcı /audit komutu"] --> B["audit-reviewer ajanı"]
-    B --> C["NormalizeContextCommand"]
-    C --> D["AuditContextPreparer"]
-    D --> E["NormalizeService"]
-    E --> F["Normalize edilmiş metin bağlamı"]
-    F --> B
-    G["core_auditor.md"] --> B
-    H["output_markdown.md"] --> B
-    B --> I["Markdown denetim raporu"]
+    B --> C["normalize_audit typed tool"]
+    C --> D["NormalizeContextCommand"]
+    D --> E["AuditContextPreparer"]
+    E --> F["NormalizeService"]
+    F --> G["Sürümlü JSON envelope"]
+    G --> C
+    C --> B
+    H["core_auditor.md"] --> B
+    I["output_markdown.md"] --> B
+    B --> J["Markdown denetim raporu"]
 ```
 
 Adapter şu sınırları uygular:
 
 - Issue dosyası zorunludur; metadata, alan açıklamaları ve checklist opsiyoneldir.
 - Dosyalar repository çalışma ağacının içinde kalmalıdır.
+- Yalnızca proje göreli `.json` yolları ve tanımlı dört CLI seçeneği kabul edilir.
+- Path traversal, mutlak yol, symlink escape, shell karakterleri, yinelenen flag ve 20 MiB üzerindeki dosya reddedilir.
 - JSON, Jackson ile parse edilmeden normalizasyona verilmez.
+- Başarılı ve hatalı sonuçlar sürümlü JSON envelope ile ayrılır; loglar audit context kabul edilmez.
 - Adapter model çağrısı yapmaz ve audit kararı üretmez.
-- Ajanın shell ve read izinleri `.opencode/agents/audit-reviewer.md` içinde daraltılmıştır.
+- Ajanın bash izni kapalıdır. Yalnızca iki prompt dosyasına `read` ve tek typed tool çağrısına izin verilir.
 
 Komut ve teslim adımları [OpenCode Denetim Ajanı Kullanım Rehberi](../integration/opencode_agent_kullanimi.md) içinde açıklanır.
 
@@ -443,9 +448,11 @@ Core unit testleri şu deterministic davranışları kapsar:
 
 OpenCode adapter testleri şunları kapsar:
 
-- CLI argüman doğrulaması.
-- Worktree dışındaki dosyaların reddedilmesi.
-- JSON girdilerinden normalize context üretilmesi.
+- Unknown, duplicate, eksik değerli ve zorunlu flag doğrulaması.
+- Mutlak yol, path traversal, symlink escape, taşınabilir olmayan ve shell biçimli path reddi.
+- Geçersiz, zorunlu null ve 20 MiB üzerindeki JSON girdilerinin reddi.
+- Opsiyonel null JSON belgelerinin sağlanmamış kaynak olarak ele alınması.
+- Sürümlü success/error envelope ve normalize context üretimi.
 
 Demo testleri şunları kapsar:
 
