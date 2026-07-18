@@ -5,7 +5,6 @@
   "requiredObservations": [
     {
       "code": "COMMENT_STATUS_TENSION",
-      "severity": ["Medium"],
       "evidencePaths": [
         "fields.status",
         "fields.comment.comments[0]"

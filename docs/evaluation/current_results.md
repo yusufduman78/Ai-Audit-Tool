@@ -97,18 +97,6 @@ Sistem promptuna sertifikasyon karari vermeyen, ancak lifecycle evidence, tracea
 
 Bu perspektif, tek basina DO-178C uyumu veya sertifikasyon sonucu anlamina gelmez. Model yalnizca saglanan kanit, metadata ve checklist uzerinden karar destek raporu uretir.
 
-## AUD-016 Gercekci Jira Bicimi Kontrolu
-
-15 Temmuz 2026 tarihinde `AUD-016`, 100 field iceren ayri issue, metadata, alan aciklamasi ve checklist dosyalariyla calistirildi. Deterministik test; 61 null alanin elendigini, 13 metadata kaydinin eslestigini, iki comment'in rich-text dahil cikarildigini, changelog ozetinin korundugunu ve dolu `Verification Impact` degerinin nihai prompta girdigini dogruladi.
-
-| Model | Sonuc | Kisa degerlendirme |
-| --- | --- | --- |
-| `qwen3:4b-instruct` | Kaldi | Beklenen eksik Verification Evidence bulgusunu yakaladi; ancak dolu Verification Impact alanini bos sayarak ikinci bir false-positive bulgu uretti. 8K yerine 32K context kullanmak sonucu degistirmedi. |
-| `qwen3.5:4b` | Kaldi | Beklenen bulguyu yakaladi; dolu Verification Impact alanini yine bos saydi ve desteklenmeyen ek rol/baseline gozlemleri uretti. |
-| `qwen3.5:9b` | Kismi basari | Dolu Verification Impact alanini dogru okudu ve ana bulguyu yakaladi; ancak checklistte bulunmayan daha ayrintili safety icerigini isteyerek desteklenmeyen bir observation ekledi. |
-
-Bu sonuc veri hattindaki bir kayip degildir: yakalanan nihai prompt, `fields.customfield_13355` yolunu dolu degeriyle icerir ve ayni alani empty bolumunde icermez. Ayrim, kucuk modellerin yogun baglamdaki seciciligi ve kriteri gereksiz yere sertlestirmesiyle ilgilidir.
-
 ## Bilinen Sinirlamalar
 
 - JSON Schema yalnizca cikti yapisini garanti eder; audit kararinin dogrulugunu garanti etmez.

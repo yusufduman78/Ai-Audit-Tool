@@ -56,3 +56,6 @@ docs/local/
 
 # Local evaluation experiments and generated LLM drafts
 evaluation/local/
+
+# Private realistic Jira fixture test
+demo/src/test/java/com/yusuf/audittool/demo/fixtures/RealJiraShapeFixtureTest.java

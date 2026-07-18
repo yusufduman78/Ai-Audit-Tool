@@ -11,7 +11,7 @@ Bir senaryoda `required` olarak belirtilen sonuc yakalanmalidir. `optional` sonu
 ## Ortak Kurallar
 
 - Bir bulgu, ilgili field veya checklist maddesinden kanit gostermelidir.
-- Beklenen severity, audit semantigine gore verilmis referanstir. Ilk Markdown asamasinda insan incelemesi severity degerlendirmesine eslik eder.
+- Beklenen severity yalnizca finding kayitlari icin audit semantigine gore verilmis referanstir. Observation ve Insufficient Context kayitlarinda severity kullanilmaz.
 - "No supported finding" yalnizca gercekten yeterli ve tutarli kayitlarda kabul edilir.
 - Metadata veya checklist yoklugu tek basina finding degildir.
 - Unknown custom field, anlami metadata veya aciklamayla desteklenmedikce kesin bir is kuralina donusturulmez.
@@ -35,7 +35,6 @@ Bir senaryoda `required` olarak belirtilen sonuc yakalanmalidir. `optional` sonu
 | `AUD-013` | Onayli change kaydinda impact analysis eksik | Finding |
 | `AUD-014` | Safety kaynakli change kaydinda verification impact eksik | Finding |
 | `AUD-015` | Yaklasik 2.000 field, cogunlugu null | No context inflation |
-| `AUD-016` | Gercekci Jira issue ve metadata bicimi | Finding + normalization validation |
 
 ## Senaryolar
 
@@ -94,7 +93,6 @@ Bir senaryoda `required` olarak belirtilen sonuc yakalanmalidir. `optional` sonu
 
 - Required observation: `ROLE_INDEPENDENCE_RISK`
 - Evidence paths: `fields.assignee`, `fields.reviewer`
-- Reference severity: `Medium`
 - Forbidden finding: `ROLE_CONFLICT`
 
 **Basarisizlik ornekleri:** Kanitlanmamis durumu kesin politika ihlali olarak raporlamak; ayni kisileri hic fark etmemek.
@@ -253,7 +251,6 @@ Bir senaryoda `required` olarak belirtilen sonuc yakalanmalidir. `optional` sonu
 
 - Required observation: `COMMENT_STATUS_TENSION`
 - Evidence paths: `fields.status`, ilgili comment body ve created bilgisi
-- Reference severity: `Medium`
 - Forbidden finding: `STATUS_PROVEN_INVALID`
 
 **Basarisizlik ornekleri:** Comment'i yok saymak; zaman sirasi kanitlanmadan status'u kesin hatali ilan etmek; comment'i test evidence'in yerine koymak.
@@ -338,31 +335,8 @@ Bir senaryoda `required` olarak belirtilen sonuc yakalanmalidir. `optional` sonu
 
 **Basarisizlik ornekleri:** Promptun binlerce null field ile sisirilmesi; aktif custom field'larin null noise arasinda kaybolmasi; null alanlari eksik requirement diye raporlamak.
 
-### AUD-016 - Gercekci Jira Biciminde Uctan Uca Dogrulama
-
-**Amac:** Ayri issue, metadata, alan aciklamasi ve checklist dosyalarinin gercekci Jira bicimi korunarak core kutuphane akisinda birlikte calistigini dogrulamak.
-
-**Record shape:**
-
-- Issue 100 ust seviye field icerir; bunlarin 61 tanesi kullanilmayan `null` alanlardir.
-- Kayit `Done` durumundaki bir `System Requirement` kaydidir.
-- Kabul kriteri, verification method ve verification impact alanlari doludur.
-- Verification Evidence alani bos stringdir ve metadata tarafindan zorunlu olarak tanimlanir.
-- Iki comment, testin calistigini ancak resmi kanit kaydinin halen acik aksiyon oldugunu belirtir.
-- Changelog icinde `In Review` -> `Done` status gecisi bulunur.
-
-**Expected:**
-
-- Required finding: `DONE_WITHOUT_VERIFICATION_EVIDENCE`
-- Evidence paths: `fields.status`, `fields.customfield_13313`, ilgili checklist maddesi ve destekleyici comment'ler
-- Reference severity: `High`
-- Optional observation: `FORMAL_EVIDENCE_REGISTRATION_OPEN`
-- Forbidden findings: `SAFETY_CHANGE_WITHOUT_VERIFICATION_IMPACT`, `MISSING_ACCEPTANCE_CRITERIA`, `MISSING_VERIFICATION_METHOD`, null veya URL noise kaynakli bulgular
-
-**Basarisizlik ornekleri:** Dolu Verification Impact alanini bos saymak; checklistte istenmeyen daha ayrintili bir safety aciklamasini zorunlu kilmak; comment metnini resmi verification evidence yerine koymak; null field'lari eksiklik olarak raporlamak.
-
 ## Uygulama Durumu
 
-Bu katalog veri üretiminden önceki karar kaynağıdır. `AUD-001` ile `AUD-014` arasındaki senaryoların fixture ve expected dosyaları oluşturulmuştur. `AUD-015`, büyük payload üretimi için definition ve expected sözleşmesiyle tutulur; üretilen büyük çalışma dosyası yerel kalabilir. `AUD-016`, arayüze ve kutuphaneye ayri dosyalar halinde verilen gercekci Jira bicimini kapsar.
+Bu katalog veri üretiminden önceki karar kaynağıdır. `AUD-001` ile `AUD-014` arasındaki senaryoların fixture ve expected dosyaları oluşturulmuştur. `AUD-015`, büyük payload üretimi için definition ve expected sözleşmesiyle tutulur; üretilen büyük çalışma dosyası yerel kalabilir.
 
 Yeni senaryo ekleme sırası değişmez: önce katalog kararı, sonra fixture/definition, ardından expected sözleşmesi ve en son model çalışması yapılır.

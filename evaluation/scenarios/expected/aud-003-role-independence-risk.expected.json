@@ -2,10 +2,7 @@
   "scenarioId": "AUD-003",
   "requiredObservations": [
     {
-      "code": "ROLE_INDEPENDENCE_RISK",
-      "severity": [
-        "Medium"
-      ]
+      "code": "ROLE_INDEPENDENCE_RISK"
     }
   ],
   "forbiddenFindings": [

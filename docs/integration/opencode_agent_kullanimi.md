@@ -48,13 +48,13 @@ Issue dosyası zorunludur. Diğer üç dosya opsiyoneldir ve şu sırayla verili
 Repository içindeki hazır sentetik örnek:
 
 ```text
-/audit evaluation/demo-inputs/aud-016-real-jira-shape-synthetic/issue.json evaluation/demo-inputs/aud-016-real-jira-shape-synthetic/metadata.json evaluation/demo-inputs/aud-016-real-jira-shape-synthetic/field-descriptions.json evaluation/demo-inputs/aud-016-real-jira-shape-synthetic/checklist.json
+/audit evaluation/demo-inputs/aud-013-approved-change-missing-impact-analysis/issue.json evaluation/demo-inputs/aud-013-approved-change-missing-impact-analysis/metadata.json evaluation/demo-inputs/aud-013-approved-change-missing-impact-analysis/field-descriptions.json evaluation/demo-inputs/aud-013-approved-change-missing-impact-analysis/checklist.json
 ```
 
 Yalnızca issue ile çalışmak da mümkündür:
 
 ```text
-/audit evaluation/demo-inputs/aud-016-real-jira-shape-synthetic/issue.json
+/audit evaluation/demo-inputs/aud-013-approved-change-missing-impact-analysis/issue.json
 ```
 
 Opsiyonel bir dosya atlanacaksa kendisinden sonraki argümanlar da verilmemelidir. Örneğin metadata olmadan yalnızca dördüncü sıradaki checklist dosyasını geçirmek bu konumsal komut sözleşmesinde desteklenmez. Böyle bir durumda eksik yardımcı girdiler olmadan çalıştırın veya dosyaları tam sırayla sağlayın.
